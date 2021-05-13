@@ -2,22 +2,26 @@
 //
 
 #include <stdio.h> 
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <sstream>
-#include <filesystem>
-#include <string.h>
+#include <iostream> 	//input-output stream
+#include <fstream>		//file stream
+#include <string>		//string classes like string, wstring etc.
+#include <sstream>		//string stream functionality
+#include <filesystem>	//Retrieve information about paths, files, directories
+#include <string.h>		//allows for strcpy, strlen functions
 
 using namespace std;
 
 
-
+​/*/////////////////////////////////////////////////////
+Function Prototypes
+​*//////////////////////////////////////////////////////
 string get_input_file();
 string hex_decoder(string hex_addr);
 string instructions_decoder(string binary_addr,int Register[], int Memory[], int counter[]);
 
-
+/*/////////////////////////////////////////////////////
+Instruction class with declared functions + definitions
+*//////////////////////////////////////////////////////
 class instructions_exe {
 
 public:
@@ -58,7 +62,7 @@ int main()
 {
     string test_line;
     string user_test_file;
-    ifstream inFile;
+    ifstream inFile;		
     string binary_code;
     int Register [32];
     int Memory[32768];
@@ -79,14 +83,14 @@ int main()
         counter[i] = 0;
     }
 
-    user_test_file = get_input_file();
-    inFile.open(user_test_file);
-
+    user_test_file = get_input_file();	//user input file
+    inFile.open(user_test_file);		//opens user test file
+	
+	//While not at the end of the file
     while (!inFile.eof()) {
-        inFile >> test_line;
-
-        binary_code = hex_decoder(test_line);
-        cout << binary_code << endl;
+        inFile >> test_line;		//inFile reads in strings 1 by 1 (delimiter is a space)
+        binary_code = hex_decoder(test_line);		//Calls on hex_decoder and returns the binary code for that line
+        cout << binary_code << endl;		//Prints the binary code for that line
 
         //Get the total number of instructions counter[0]
         //Get the total number of arithmetic instructions counter[1]
@@ -94,7 +98,7 @@ int main()
         //Get the total number of memory instructions counter[3]
         //Get the total number of control transfer instructions counter[4]
 
-        counter[0] = counter[0] + 1;
+        counter[0] = counter[0] + 1;	//Keeps track of total instructions
 
         string result = instructions_decoder(binary_code, Register, Memory, counter);
     }
@@ -107,8 +111,9 @@ int main()
     cout << "Total number of memory instructions: " << counter[3] << endl;
     cout << "Total number of control transfer instructions: " << counter[4] << endl;
 }
-
+/*////////////////////////////////////////////////////
 //Get user input file and check if the file is valid
+*/////////////////////////////////////////////////////
 string get_input_file() {
     string input_file;
 
@@ -116,15 +121,15 @@ string get_input_file() {
     cout << "Please enter a valid test file:\n";
     //cin >> input_file;
     input_file = "C:/Users/taipham/source/repos/ECE586_FinalProject/sample_memory_image.txt";
-
     //input C:\Users\taipham\source\repos\ECE586_FinalProject\sample_memory_image.txt
-    cout << "Input file: " << input_file << endl;
-    //Get the input file
+    cout << "Input file: " << input_file << endl;     //Write out the input file
 
-    bool file_flag = true;
 
+    bool file_flag = true;		//Set a flag
+	
+	//Check if file has valid data, if valid set file_flag to false and ask for valid file location
     while (file_flag) {
-        ifstream f(input_file.c_str());
+        ifstream f(input_file.c_str());		//Read from this file
         if (!(f.good())) {
             cout << "Test file is not valid. Please enter a valid test file:\n";
             cin >> input_file;
@@ -134,10 +139,12 @@ string get_input_file() {
             file_flag = false;
         }
     }
-    return input_file;
+    return input_file;		//returns input file to main
 }
 
-//Convert hex to binary
+/*//////////////////////////////////////////////
+Convert hex to binary
+*///////////////////////////////////////////////
 string hex_decoder(string hex_addr) {
 
     long int i = 0;
@@ -217,21 +224,24 @@ string hex_decoder(string hex_addr) {
             cout << "\nInvalid hexadecimal digit. Hex digit must be number of capital letter: A, B, C, D, E, F: "
                 << hex_addr[i] << endl;
         }
-        address = address.append(temp_address);
+        address = address.append(temp_address);		//appends binary values to address
         // cout << address << endl;
         i++;
     }
     return address;
 }
 
-//Instruction decoder
+/*////////////////////////////////////////////////////
+Instruction decoder
+*/////////////////////////////////////////////////////
 string instructions_decoder(string binary_addr, int Register[], int Memory[], int counter[]) {
-    instructions_exe function;
-    string result;    
-
+    instructions_exe function;		//instruction object
+    string result;    				
+	
+	//Checking if instruction is valid before proceeding
     if (binary_addr != "00000000000000000000000000000000") {
         string opcode = binary_addr.substr(0, 6);
-
+		//Checking if an arithmetic instruction
         if (opcode == "000000") {
             cout << "call ADD function..." << endl;
             counter[1] = counter[1] + 1;
