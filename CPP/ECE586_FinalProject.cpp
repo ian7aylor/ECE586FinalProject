@@ -11,10 +11,7 @@
 
 using namespace std;
 
-
-​/*/////////////////////////////////////////////////////
-Function Prototypes
-​*//////////////////////////////////////////////////////
+// user prototype functions
 string get_input_file();
 string hex_decoder(string hex_addr);
 string instructions_decoder(string binary_addr,int Register[], int Memory[], int counter[]);
@@ -26,8 +23,23 @@ class instructions_exe {
 
 public:
 
-    void add_func() {
+    void add_func(string binary_addr, int Register[], int Memory[]) {
+        
+        //Get instruction decoder
+        string rs_bin = binary_addr.substr(6, 5);
+        string rt_bin = binary_addr.substr(11, 5);
+        string rd_bin = binary_addr.substr(16, 5);
 
+        //Convert the binary value to dec
+        int rs = stoi(rs_bin, nullptr, 2);
+        int rt = stoi(rt_bin, nullptr, 2);
+        int rd = stoi(rd_bin, nullptr, 2);
+
+        //Set the value to the register, [rd] = [rs] + [rt]
+        cout << rd << ": "<< Register[rd] << "    " << rs << ": "<< Register[rs] << "   " << rt <<": " << Register[rt] << endl;
+        Register[rd] = Register[rs] + Register[rt];
+
+        cout << rd << ": " << Register[rd] << endl;
     }
     void sub_func() {
 
@@ -42,6 +54,10 @@ public:
         string rt_bin = binary_addr.substr(11, 5);
         string Imm_bin = binary_addr.substr(16, 16);
 
+        if (Imm_bin.substr(0, 1) == "1") {
+            cout << "Negative number... Need to use 2s' complement" << endl;
+        }
+
         //Convert the binary value to dec
         int rs = stoi(rs_bin, nullptr, 2);
         int rt = stoi(rt_bin, nullptr, 2);
@@ -52,6 +68,52 @@ public:
 
         cout << rt << ": " << Register[rt] << endl;
         
+    }
+
+    void subi_func(string binary_addr, int Register[], int Memory[]) {
+
+        //Get instruction decoder
+        string rs_bin = binary_addr.substr(6, 5);
+        string rt_bin = binary_addr.substr(11, 5);
+        string Imm_bin = binary_addr.substr(16, 16);
+
+        if (Imm_bin.substr(0, 1) == "1") {
+            cout << "Negative number... Need to use 2s' complement" << endl;
+        }
+
+        //Convert the binary value to dec
+        int rs = stoi(rs_bin, nullptr, 2);
+        int rt = stoi(rt_bin, nullptr, 2);
+        int Imm = stoi(Imm_bin, nullptr, 2);
+
+        //Set the value to the register, [rt] = [rs] - Imm
+        Register[rt] = Register[rs] - Imm;
+
+        cout << rt << ": " << Register[rt] << endl;
+
+    }
+
+    void muli_func(string binary_addr, int Register[], int Memory[]) {
+
+        //Get instruction decoder
+        string rs_bin = binary_addr.substr(6, 5);
+        string rt_bin = binary_addr.substr(11, 5);
+        string Imm_bin = binary_addr.substr(16, 16);
+
+        if (Imm_bin.substr(0, 1) == "1") {
+            cout << "Negative number... Need to use 2s' complement" << endl;
+        }
+
+        //Convert the binary value to dec
+        int rs = stoi(rs_bin, nullptr, 2);
+        int rt = stoi(rt_bin, nullptr, 2);
+        int Imm = stoi(Imm_bin, nullptr, 2);
+
+        //Set the value to the register, [rt] = [rs] * Imm
+        Register[rt] = Register[rs] * Imm;
+
+        cout << rt << ": " << Register[rt] << endl;
+
     }
 };
 
@@ -241,10 +303,11 @@ string instructions_decoder(string binary_addr, int Register[], int Memory[], in
 	//Checking if instruction is valid before proceeding
     if (binary_addr != "00000000000000000000000000000000") {
         string opcode = binary_addr.substr(0, 6);
-		//Checking if an arithmetic instruction
+
         if (opcode == "000000") {
             cout << "call ADD function..." << endl;
             counter[1] = counter[1] + 1;
+            function.add_func(binary_addr, Register, Memory);
         }
         else if (opcode == "000010") {
 
@@ -266,11 +329,13 @@ string instructions_decoder(string binary_addr, int Register[], int Memory[], in
 
             cout << "call SUBI function..." << endl;
             counter[1] = counter[1] + 1;
+            function.subi_func(binary_addr, Register, Memory);
         }
         else if (opcode == "000101") {
 
             cout << "call MULI function..." << endl;
             counter[1] = counter[1] + 1;
+            function.muli_func(binary_addr, Register, Memory);
         }
     }
     
