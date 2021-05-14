@@ -11,7 +11,9 @@
 
 using namespace std;
 
+/*/////////////////////////////////////////////////////
 // user prototype functions
+/*/////////////////////////////////////////////////////
 string get_input_file();
 string hex_decoder(string hex_addr);
 string instructions_decoder(string binary_addr,int Register[], int Memory[], int counter[]);
