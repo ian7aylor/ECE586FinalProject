@@ -4,7 +4,7 @@
         "name": "(gdb) Launch",
         "type": "cppdbg",
         "request": "launch",
-        "program": "C:\\Learning\\GI_CQ\\Spring2021\\ECE586_CompArch\\ECE586FinalProject\\CPP\\main.exe",
+        "program": "C:\\Learning\\GI_CQ\\Spring2021\\ECE586_CompArch\\ECE586FinalProject\\CPP\\Ian'sMethod\\ECE586_FinalProject.exe",
         "args": [],
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}",
