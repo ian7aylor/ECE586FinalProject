@@ -18,6 +18,7 @@ string get_input_file();
 string hex_decoder(string hex_addr);
 string instructions_decoder(string binary_addr,int Register[], int Memory[], int counter[]);
 void print_result(int counter[]);
+int pipeline_sim(int rs[], int rt[], int rd[]);
 /*/////////////////////////////////////////////////////
 Instruction class with declared functions + definitions
 *//////////////////////////////////////////////////////
@@ -558,7 +559,13 @@ string instructions_decoder(string binary_addr, int Register[], int Memory[], in
     else {
         cout << "0x00000000 input... skip!" << endl;
     }
-    
 
     return result;
+}
+/*//////////////////////////////////////////////
+This is a pipeline that looks at previous instructions
+And looks for RAW and WAR hazards and whether or not there is a stall on the pipeline.
+*//////////////////////////////////////////////
+int pipeline_sim(int rs[], int rt[], int rd[]){
+
 }
