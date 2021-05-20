@@ -11,12 +11,11 @@
 
 using namespace std;
 
-/*/////////////////////////////////////////////////////
 // user prototype functions
-/*/////////////////////////////////////////////////////
 string get_input_file();
 string hex_decoder(string hex_addr);
-string instructions_decoder(string binary_addr,int Register[], int Memory[], int counter[]);
+string instructions_decoder(string binary_addr,int Register[], int Memory[], int counter[], int register_change[], int memory_change[]);
+void register_change_list(string binary_addr, int register_change[], bool if_imm);
 
 /*/////////////////////////////////////////////////////
 Instruction class with declared functions + definitions
@@ -24,6 +23,23 @@ Instruction class with declared functions + definitions
 class instructions_exe {
 
 public:
+
+    int two_complement(string bin_16b) {
+        
+        for (int i = 0; i < bin_16b.length(); i++) {
+            if (bin_16b[i] == '1') {
+                bin_16b[i] == '0';
+            }
+            else {
+                bin_16b[i] == '1';
+            }
+        }
+
+        int dec_16b_1comp = stoi(bin_16b, nullptr, 2);
+        int dec_16b_2comp = dec_16b_1comp + 1;
+
+        return dec_16b_2comp;
+    }
 
     void add_func(string binary_addr, int Register[], int Memory[]) {
         
@@ -43,11 +59,41 @@ public:
 
         cout << rd << ": " << Register[rd] << endl;
     }
-    void sub_func() {
+    void sub_func(string binary_addr, int Register[], int Memory[]) {
 
+        //Get instruction decoder
+        string rs_bin = binary_addr.substr(6, 5);
+        string rt_bin = binary_addr.substr(11, 5);
+        string rd_bin = binary_addr.substr(16, 5);
+
+        //Convert the binary value to dec
+        int rs = stoi(rs_bin, nullptr, 2);
+        int rt = stoi(rt_bin, nullptr, 2);
+        int rd = stoi(rd_bin, nullptr, 2);
+
+        //Set the value to the register, [rd] = [rs] - [rt]
+        cout << rd << ": " << Register[rd] << "    " << rs << ": " << Register[rs] << "   " << rt << ": " << Register[rt] << endl;
+        Register[rd] = Register[rs] - Register[rt];
+
+        cout << rd << ": " << Register[rd] << endl;
     }
-    void mul_func() {
+    void mul_func(string binary_addr, int Register[], int Memory[]) {
 
+        //Get instruction decoder
+        string rs_bin = binary_addr.substr(6, 5);
+        string rt_bin = binary_addr.substr(11, 5);
+        string rd_bin = binary_addr.substr(16, 5);
+
+        //Convert the binary value to dec
+        int rs = stoi(rs_bin, nullptr, 2);
+        int rt = stoi(rt_bin, nullptr, 2);
+        int rd = stoi(rd_bin, nullptr, 2);
+
+        //Set the value to the register, [rd] = [rs] * [rt]
+        cout << rd << ": " << Register[rd] << "    " << rs << ": " << Register[rs] << "   " << rt << ": " << Register[rt] << endl;
+        Register[rd] = Register[rs] * Register[rt];
+
+        cout << rd << ": " << Register[rd] << endl;
     }
     void addi_func(string binary_addr, int Register[], int Memory[]) {
         
@@ -55,17 +101,23 @@ public:
         string rs_bin = binary_addr.substr(6, 5);
         string rt_bin = binary_addr.substr(11, 5);
         string Imm_bin = binary_addr.substr(16, 16);
+        int Imm = 0;
 
         if (Imm_bin.substr(0, 1) == "1") {
             cout << "Negative number... Need to use 2s' complement" << endl;
+            int dec_2comp = two_complement(Imm_bin);
+            Imm = dec_2comp * (-1);
+        }
+        else {
+            Imm = stoi(Imm_bin, nullptr, 2);
         }
 
         //Convert the binary value to dec
         int rs = stoi(rs_bin, nullptr, 2);
         int rt = stoi(rt_bin, nullptr, 2);
-        int Imm = stoi(Imm_bin, nullptr, 2);
         
         //Set the value to the register, [rt] = [rs] + Imm
+        cout << "rt: " << Register[rt] << "; rs: " << Register[rs] << "; Imm: " << Imm << endl;
         Register[rt] = Register[rs] + Imm;
 
         cout << rt << ": " << Register[rt] << endl;
@@ -78,19 +130,24 @@ public:
         string rs_bin = binary_addr.substr(6, 5);
         string rt_bin = binary_addr.substr(11, 5);
         string Imm_bin = binary_addr.substr(16, 16);
+        int Imm = 0;
 
         if (Imm_bin.substr(0, 1) == "1") {
             cout << "Negative number... Need to use 2s' complement" << endl;
+            int dec_2comp = two_complement(Imm_bin);
+            Imm = dec_2comp * (-1);
+        }
+        else {
+            Imm = stoi(Imm_bin, nullptr, 2);
         }
 
         //Convert the binary value to dec
         int rs = stoi(rs_bin, nullptr, 2);
         int rt = stoi(rt_bin, nullptr, 2);
-        int Imm = stoi(Imm_bin, nullptr, 2);
 
         //Set the value to the register, [rt] = [rs] - Imm
+        cout << "rt: " << Register[rt] << "; rs: " << Register[rs] << "; Imm: " << Imm << endl;
         Register[rt] = Register[rs] - Imm;
-
         cout << rt << ": " << Register[rt] << endl;
 
     }
@@ -101,17 +158,23 @@ public:
         string rs_bin = binary_addr.substr(6, 5);
         string rt_bin = binary_addr.substr(11, 5);
         string Imm_bin = binary_addr.substr(16, 16);
+        int Imm = 0;
 
         if (Imm_bin.substr(0, 1) == "1") {
             cout << "Negative number... Need to use 2s' complement" << endl;
+            int dec_2comp = two_complement(Imm_bin);
+            Imm = dec_2comp * (-1);
+        }
+        else {
+            Imm = stoi(Imm_bin, nullptr, 2);
         }
 
         //Convert the binary value to dec
         int rs = stoi(rs_bin, nullptr, 2);
         int rt = stoi(rt_bin, nullptr, 2);
-        int Imm = stoi(Imm_bin, nullptr, 2);
 
         //Set the value to the register, [rt] = [rs] * Imm
+        cout << "rt: " << Register[rt] << "; rs: " << Register[rs] << "; Imm: " << Imm << endl;
         Register[rt] = Register[rs] * Imm;
 
         cout << rt << ": " << Register[rt] << endl;
@@ -131,15 +194,19 @@ int main()
     int Register [32];
     int Memory[32768];
     int counter[5];
+    int register_change[32];
+    int memory_change[32768];
 
     //initialize register array
     for (int i = 0; i < 32; i++) {
         Register[i] = 0;
+        register_change[i] = -999;
     }
 
     //initialize memory array
     for (int i = 0; i < 32768; i++) {
         Memory[i] = 0;
+        memory_change[i] = -999;
     }
 
     //initialize counter array
@@ -164,9 +231,21 @@ int main()
 
         counter[0] = counter[0] + 1;	//Keeps track of total instructions
 
-        string result = instructions_decoder(binary_code, Register, Memory, counter);
+        string result = instructions_decoder(binary_code, Register, Memory, counter, register_change, memory_change);
+
+        // Save register change list and memory change list
+
     }
 
+    cout << "\n**** Register Summary ****" << endl;
+    for (int i = 0; i < 32; i++) {
+        if (register_change[i] != -999) {
+            cout << "R" << register_change[i] << ": " << Register[register_change[i]] << endl;
+        }
+        else {
+            break;
+        }
+    }
 
     cout << "\n**** Instructions count summary ****" << endl;
     cout << "Total number of instructions: " << counter[0] << endl;
@@ -298,9 +377,10 @@ string hex_decoder(string hex_addr) {
 /*////////////////////////////////////////////////////
 Instruction decoder
 */////////////////////////////////////////////////////
-string instructions_decoder(string binary_addr, int Register[], int Memory[], int counter[]) {
+string instructions_decoder(string binary_addr, int Register[], int Memory[], int counter[], int register_change[], int memory_change[]) {
     instructions_exe function;		//instruction object
-    string result;    				
+    string result;
+    bool if_imm_flag = false;
 	
 	//Checking if instruction is valid before proceeding
     if (binary_addr != "00000000000000000000000000000000") {
@@ -310,34 +390,48 @@ string instructions_decoder(string binary_addr, int Register[], int Memory[], in
             cout << "call ADD function..." << endl;
             counter[1] = counter[1] + 1;
             function.add_func(binary_addr, Register, Memory);
+            register_change_list(binary_addr, register_change, if_imm_flag);
         }
         else if (opcode == "000010") {
 
             cout << "call SUB function..." << endl;
             counter[1] = counter[1] + 1;
+            function.sub_func(binary_addr, Register, Memory);
+            register_change_list(binary_addr, register_change, if_imm_flag);
         }
         else if (opcode == "000100") {
 
             cout << "call MUL function..." << endl;
             counter[1] = counter[1] + 1;
+            function.mul_func(binary_addr, Register, Memory);
+            register_change_list(binary_addr, register_change, if_imm_flag);
         }
         else if (opcode == "000001") {
 
             cout << "call ADDI function..." << endl;
             counter[1] = counter[1] + 1;
             function.addi_func(binary_addr, Register, Memory);
+
+            if_imm_flag = true;
+            register_change_list(binary_addr, register_change, if_imm_flag);
         }
         else if (opcode == "000011") {
 
             cout << "call SUBI function..." << endl;
             counter[1] = counter[1] + 1;
             function.subi_func(binary_addr, Register, Memory);
+
+            if_imm_flag = true;
+            register_change_list(binary_addr, register_change, if_imm_flag);
         }
         else if (opcode == "000101") {
 
             cout << "call MULI function..." << endl;
             counter[1] = counter[1] + 1;
             function.muli_func(binary_addr, Register, Memory);
+
+            if_imm_flag = true;
+            register_change_list(binary_addr, register_change, if_imm_flag);
         }
     }
     
@@ -347,4 +441,41 @@ string instructions_decoder(string binary_addr, int Register[], int Memory[], in
     
 
     return result;
+}
+
+//Keep track of the change of register
+void register_change_list(string binary_addr, int register_change[], bool if_imm) {
+
+    bool if_exist_flag = false;
+    int r_reg;
+
+    //Get rd register
+    if (if_imm == false) {
+        r_reg = stoi(binary_addr.substr(16, 5), nullptr, 2);
+        
+    }
+
+    //Get rt register
+    else {
+        r_reg = stoi(binary_addr.substr(11, 5), nullptr, 2);
+    }
+
+    for (int i = 0; i < 32; i++) {
+        //cout << register_change[i] << endl;
+        if (r_reg == register_change[i]) {
+            if_exist_flag = true;
+        }
+        if (register_change[i] == -999) {
+            break;
+        }
+    }
+
+    if (if_exist_flag == false) {
+        for (int i = 0; i < 32; i++) {
+            if (register_change[i] == -999) {
+                register_change[i] = r_reg;
+                break;
+            }
+        }
+    }
 }
