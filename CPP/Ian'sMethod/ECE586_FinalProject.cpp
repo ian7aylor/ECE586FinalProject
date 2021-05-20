@@ -8,7 +8,6 @@
 #include <sstream>		//string stream functionality
 #include <filesystem>	//Retrieve information about paths, files, directories
 #include <string.h>		//allows for strcpy, strlen functions
-
 using namespace std;
 
 
@@ -18,7 +17,7 @@ Function Prototypes
 string get_input_file();
 string hex_decoder(string hex_addr);
 string instructions_decoder(string binary_addr,int Register[], int Memory[], int counter[]);
-
+void print_result(int counter[]);
 /*/////////////////////////////////////////////////////
 Instruction class with declared functions + definitions
 *//////////////////////////////////////////////////////
@@ -141,11 +140,146 @@ public:
     }
 	
 	/*/////////////////////////////////////////////////////////////
-	Logical functions.
+	Logical functions:
+    - OR
+    - OR Immediate
+    - AND 
+    - AND Immediate
+    - XOR
+    - XOR Immediate
 	*//////////////////////////////////////////////////////////////	
+    void OR_func(string binary_addr, int Register[], int Memory[]){
+        
+        //Decode the instruction
+        string rs_bin = binary_addr.substr(6, 5);
+        string rt_bin = binary_addr.substr(11, 5);
+        string rd_bin = binary_addr.substr(16, 5);
 
+        //Convert the binary value to dec
+        int rs = stoi(rs_bin, nullptr, 2);
+        int rt = stoi(rt_bin, nullptr, 2);
+        int rd = stoi(rd_bin, nullptr, 2);
 
+        //Set the value to the register, [rd] = [rs] | [rt]
+        Register[rd] = Register[rs] | Register[rt];
+        cout << rd << ": "<< Register[rd] << "    " << rs << ": "<< Register[rs] << "   " << rt <<": " << Register[rt] << endl;
+    }
 
+    void ORI_func(string binary_addr, int Register[], int Memory[]){
+        
+        //Get instruction decoder
+        string rs_bin = binary_addr.substr(6, 5);		//Gets binary value for 
+        string rt_bin = binary_addr.substr(11, 5);
+        string Imm_bin = binary_addr.substr(16, 16);
+
+        //Convert the binary value to dec
+        int rs = stoi(rs_bin, nullptr, 2);
+        int rt = stoi(rt_bin, nullptr, 2);
+        int Imm = stoi(Imm_bin, nullptr, 2);
+
+        //Set the value to the register, [rt] = [rs] | Imm
+        Register[rt] = Register[rs] | Imm;
+
+        cout << rt << ": " << Register[rt] << endl;
+    }
+
+    void AND_func(string binary_addr, int Register[], int Memory[] ){
+        //Decode the instruction
+        string rs_bin = binary_addr.substr(6, 5);
+        string rt_bin = binary_addr.substr(11, 5);
+        string rd_bin = binary_addr.substr(16, 5);
+
+        //Convert the binary value to dec
+        int rs = stoi(rs_bin, nullptr, 2);
+        int rt = stoi(rt_bin, nullptr, 2);
+        int rd = stoi(rd_bin, nullptr, 2);
+
+        //Set the value to the register, [rd] = [rs] & [rt]
+        Register[rd] = Register[rs] & Register[rt];
+        cout << rd << ": "<< Register[rd] << "    " << rs << ": "<< Register[rs] << "   " << rt <<": " << Register[rt] << endl;
+    }
+
+    void ANDI_func(string binary_addr, int Register[], int Memory[]){
+        //Get instruction decoder
+        string rs_bin = binary_addr.substr(6, 5);		//Gets binary value for 
+        string rt_bin = binary_addr.substr(11, 5);
+        string Imm_bin = binary_addr.substr(16, 16);
+
+        //Convert the binary value to dec
+        int rs = stoi(rs_bin, nullptr, 2);
+        int rt = stoi(rt_bin, nullptr, 2);
+        int Imm = stoi(Imm_bin, nullptr, 2);
+
+        //Set the value to the register, [rt] = [rs] & Imm
+        Register[rt] = Register[rs] & Imm;
+
+        cout << rt << ": " << Register[rt] << endl; 
+    }
+
+    void XOR_func(string binary_addr, int Register[], int Memory[]){
+        //Decode the instruction
+        string rs_bin = binary_addr.substr(6, 5);
+        string rt_bin = binary_addr.substr(11, 5);
+        string rd_bin = binary_addr.substr(16, 5);
+
+        //Convert the binary value to dec
+        int rs = stoi(rs_bin, nullptr, 2);
+        int rt = stoi(rt_bin, nullptr, 2);
+        int rd = stoi(rd_bin, nullptr, 2);
+
+        //Set the value to the register, [rd] = [rs] ^ [rt]
+        Register[rd] = Register[rs] ^ Register[rt];
+        cout << rd << ": "<< Register[rd] << "    " << rs << ": "<< Register[rs] << "   " << rt <<": " << Register[rt] << endl;
+    }
+
+    void XORI_func(string binary_addr, int Register[], int Memory[]){
+        //Get instruction decoder
+        string rs_bin = binary_addr.substr(6, 5);		//Gets binary value for 
+        string rt_bin = binary_addr.substr(11, 5);
+        string Imm_bin = binary_addr.substr(16, 16);
+
+        //Convert the binary value to dec
+        int rs = stoi(rs_bin, nullptr, 2);
+        int rt = stoi(rt_bin, nullptr, 2);
+        int Imm = stoi(Imm_bin, nullptr, 2);
+
+        //Set the value to the register, [rt] = [rs] & Imm
+        Register[rt] = Register[rs] ^ Imm;
+
+        cout << rt << ": " << Register[rt] << endl;     
+    }
+    void LDW_func(string binary_addr, int Register[], int Memory[]){
+        //Get instruction decoder
+        string rs_bin = binary_addr.substr(6, 5);		//Gets binary value for 
+        string rt_bin = binary_addr.substr(11, 5);
+        string Imm_bin = binary_addr.substr(16, 16);
+
+        //Convert the binary value to dec
+        int rs = stoi(rs_bin, nullptr, 2);
+        int rt = stoi(rt_bin, nullptr, 2);
+        int Imm = stoi(Imm_bin, nullptr, 2);
+
+        //Set the value to the register, [rt] = Mem[[rs] + Imm]
+        Register[rt] = Memory[Register[rs] + Imm];
+
+        cout << rt << ": " << Register[rt] << endl;     
+    }
+    void STW_func(string binary_addr, int Register[], int Memory[]){
+        //Get instruction decoder
+        string rs_bin = binary_addr.substr(6, 5);		//Gets binary value for 
+        string rt_bin = binary_addr.substr(11, 5);
+        string Imm_bin = binary_addr.substr(16, 16);
+
+        //Convert the binary value to dec
+        int rs = stoi(rs_bin, nullptr, 2);
+        int rt = stoi(rt_bin, nullptr, 2);
+        int Imm = stoi(Imm_bin, nullptr, 2);
+
+        //Set the value to the register, Mem[[rs] + Imm] = [rt]
+        Memory[Register[rs] + Imm] = Register[rt];
+
+        cout << rt << ": " << Register[rt] << endl;     
+    }
 };
 
 //Create an Register Array Reg[32] to store R0-R31 register
@@ -195,7 +329,11 @@ int main()
 
         string result = instructions_decoder(binary_code, Register, Memory, counter);
     }
+    print_result(counter);
+}
 
+
+void print_result(int counter[]) {
 
     cout << "\n**** Instructions count summary ****" << endl;
     cout << "Total number of instructions: " << counter[0] << endl;
@@ -203,6 +341,9 @@ int main()
     cout << "Total number of logical instructions: " << counter[2] << endl;
     cout << "Total number of memory instructions: " << counter[3] << endl;
     cout << "Total number of control transfer instructions: " << counter[4] << endl;
+
+    exit(0);
+
 }
 /*////////////////////////////////////////////////////
 //Get user input file and check if the file is valid
@@ -213,7 +354,7 @@ string get_input_file() {
 
     cout << "Please enter a valid test file:\n";
     //cin >> input_file;
-    input_file = "C:/Users/taipham/source/repos/ECE586_FinalProject/sample_memory_image.txt";
+    input_file = "C:/Learning/GI_CQ/Spring2021/ECE586_CompArch/ECE586FinalProject/CPP/Ian'sMethod/logic_image.txt";
     //input C:\Users\taipham\source\repos\ECE586_FinalProject\sample_memory_image.txt
     cout << "Input file: " << input_file << endl;     //Write out the input file
 
@@ -367,6 +508,50 @@ string instructions_decoder(string binary_addr, int Register[], int Memory[], in
             cout << "call MULI function..." << endl;
             counter[1] = counter[1] + 1;
             function.muli_func(binary_addr, Register, Memory);
+        }
+        else if (opcode == "000110") {
+            cout << "call OR function..." << endl;
+            counter[2] = counter[2] + 1;
+            function.OR_func(binary_addr, Register, Memory);
+        }
+        else if (opcode == "000111") {
+            cout << "call OR Immediate function..." << endl;
+            counter[2] = counter[2] + 1;
+            function.ORI_func(binary_addr, Register, Memory);
+        }
+        else if (opcode == "001000") {
+            cout << "call AND function..." << endl;
+            counter[2] = counter[2] + 1;
+            function.AND_func(binary_addr, Register, Memory);
+        }
+        else if (opcode == "001001") {
+            cout << "call AND Immediate function..." << endl;
+            counter[2] = counter[2] + 1;
+            function.ANDI_func(binary_addr, Register, Memory);
+        }    
+        else if (opcode == "001010") {
+            cout << "call XOR function..." << endl;
+            counter[2] = counter[2] + 1;
+            function.XOR_func(binary_addr, Register, Memory);
+        }  
+        else if (opcode == "001011") {
+            cout << "call XOR Immediate function..." << endl;
+            counter[2] = counter[2] + 1;
+            function.XORI_func(binary_addr, Register, Memory);
+        }     
+        else if (opcode == "001100") {
+            cout << "call STW Immediate function..." << endl;
+            counter[3] = counter[3] + 1;
+            function.LDW_func(binary_addr, Register, Memory);
+        }  
+        else if (opcode == "001101") {
+            cout << "call STW Immediate function..." << endl;
+            counter[3] = counter[3] + 1;
+            function.STW_func(binary_addr, Register, Memory);
+        }
+        else if (opcode == "010001") {
+            cout << "HALT program" << endl;
+            print_result(counter);
         }
     }
     
