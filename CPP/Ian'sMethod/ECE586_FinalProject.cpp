@@ -16,8 +16,9 @@ Function Prototypes
 ?*//////////////////////////////////////////////////////
 string get_input_file();
 string hex_decoder(string hex_addr);
-string instructions_decoder(string binary_addr,int Register[], int Memory[], int counter[], uint8_t special);
-void print_result(int counter[], int Register[], int Memory[], uint8_t special);
+string instructions_decoder(string binary_addr,int Register[], int Memory[], int counter[], int register_change[], int memory_change[], uint8_t special);
+void print_result(int counter[], int Register[], int Memory[],int register_change[], int memory_change[], uint8_t special);
+void register_change_list(string binary_addr, int register_change[], bool if_imm);
 int pipeline_sim(int rs[], int rt[], int rd[]);
 /*/////////////////////////////////////////////////////
 Instruction class with declared functions + definitions
@@ -25,6 +26,24 @@ Instruction class with declared functions + definitions
 class instructions_exe {
 
 public:
+   int two_complement(string bin_16b) {
+        
+        for (int i = 0; i < bin_16b.length(); i++) {
+            if (bin_16b[i] == '1') {
+                bin_16b[i] == '0';
+            }
+            else {
+                bin_16b[i] == '1';
+            }
+        }
+
+        int dec_16b_1comp = stoi(bin_16b, nullptr, 2);
+        int dec_16b_2comp = dec_16b_1comp + 1;
+
+        return dec_16b_2comp;
+    }
+
+
 	/*/////////////////////////////////////////////////////////////
 	Addition function of values in two registers
 	Stores in target register
@@ -99,7 +118,7 @@ public:
         string rs_bin = binary_addr.substr(6, 5);		//
         string rt_bin = binary_addr.substr(11, 5);
         string Imm_bin = binary_addr.substr(16, 16);
-
+        int Imm = 0;
         if (Imm_bin.substr(0, 1) == "1") {
             cout << "Negative number... Need to use 2s' complement" << endl;
             int dec_2comp = two_complement(Imm_bin);
@@ -339,17 +358,21 @@ int main()
     string binary_code;
     int Register [32];
     int Memory[32768];
+    int register_change[32];
+    int memory_change[32768];
     int counter[5];
     uint8_t special = 0;        //tells print whether it is a halt or not. Initialize to 0
 
     //initialize register array to values of 0
     for (int i = 0; i < 32; i++) {
         Register[i] = 0;
+        register_change[i] = -999;
     }
 
     //initialize memory array to values of 0
     for (int i = 0; i < 32768; i++) {
         Memory[i] = 0;
+        memory_change[i] = -999;
     }
 
     //initialize counter array to values of 0
@@ -374,15 +397,15 @@ int main()
 
         counter[0] = counter[0] + 1;	//Keeps track of total instructions
 
-        string result = instructions_decoder(binary_code, Register, Memory, counter, special);
+        string result = instructions_decoder(binary_code, Register, Memory, counter, register_change, memory_change, special);
     }
-    print_result(counter, Register, Memory, special);
+    print_result(counter, Register, Memory, register_change, memory_change, special);
 }
 
 /*////////////////////////////////////////////////////
 Prints the final results of the pipeline
 */////////////////////////////////////////////////////
-void print_result(int counter[], int Register[], int Memory[], uint8_t special) {
+void print_result(int counter[], int Register[], int Memory[],int register_change[], int memory_change[], uint8_t special) {
 
     cout << "\n**** Instructions count summary ****" << endl;
     cout << "Total number of instructions: " << counter[0] << endl;
@@ -539,11 +562,11 @@ string hex_decoder(string hex_addr) {
 /*////////////////////////////////////////////////////
 Instruction decoder
 */////////////////////////////////////////////////////
-string instructions_decoder(string binary_addr, int Register[], int Memory[], int counter[], uint8_t special) {
+string instructions_decoder(string binary_addr, int Register[], int Memory[], int counter[],int register_change[], int memory_change[], uint8_t special) {
     instructions_exe function;		//instruction object
-    string result;    	            			
-	int instruction_type[2];
-
+    string result;
+    bool if_imm_flag = false;
+	
 	//Checking if instruction is valid before proceeding
     if (binary_addr != "00000000000000000000000000000000") {
         string opcode = binary_addr.substr(0, 6);
@@ -552,80 +575,48 @@ string instructions_decoder(string binary_addr, int Register[], int Memory[], in
             cout << "call ADD function..." << endl;
             counter[1] = counter[1] + 1;    //counts instructions of type arithmetic
             function.add_func(binary_addr, Register, Memory);
-
+            register_change_list(binary_addr, register_change, if_imm_flag);
         }
         else if (opcode == "000010") {
 
             cout << "call SUB function..." << endl;
-            counter[1] = counter[1] + 1;    //counts instructions of type arithmetic
+            counter[1] = counter[1] + 1;
+            function.sub_func(binary_addr, Register, Memory);
+            register_change_list(binary_addr, register_change, if_imm_flag);
         }
         else if (opcode == "000100") {
 
             cout << "call MUL function..." << endl;
-            counter[1] = counter[1] + 1;    //counts instructions of type arithmetic
+            counter[1] = counter[1] + 1;
+            function.mul_func(binary_addr, Register, Memory);
+            register_change_list(binary_addr, register_change, if_imm_flag);
         }
         else if (opcode == "000001") {
 
             cout << "call ADDI function..." << endl;
             counter[1] = counter[1] + 1;    //counts instructions of type arithmetic
             function.addi_func(binary_addr, Register, Memory);
+
+            if_imm_flag = true;
+            register_change_list(binary_addr, register_change, if_imm_flag);
         }
         else if (opcode == "000011") {
 
             cout << "call SUBI function..." << endl;
             counter[1] = counter[1] + 1;    //counts instructions of type arithmetic
             function.subi_func(binary_addr, Register, Memory);
+
+            if_imm_flag = true;
+            register_change_list(binary_addr, register_change, if_imm_flag);
         }
         else if (opcode == "000101") {
 
             cout << "call MULI function..." << endl;
             counter[1] = counter[1] + 1;    //counts instructions of type arithmetic
             function.muli_func(binary_addr, Register, Memory);
-        }
-        else if (opcode == "000110") {
-            cout << "call OR function..." << endl;
-            counter[2] = counter[2] + 1;    //counts instructions of type logic
-            function.OR_func(binary_addr, Register, Memory);
-        }
-        else if (opcode == "000111") {
-            cout << "call OR Immediate function..." << endl;
-            counter[2] = counter[2] + 1;    //counts instructions of type logic
-            function.ORI_func(binary_addr, Register, Memory);
-        }
-        else if (opcode == "001000") {
-            cout << "call AND function..." << endl;
-            counter[2] = counter[2] + 1;    //counts instructions of type logic
-            function.AND_func(binary_addr, Register, Memory);
-        }
-        else if (opcode == "001001") {
-            cout << "call AND Immediate function..." << endl;
-            counter[2] = counter[2] + 1;    //counts instructions of type logic
-            function.ANDI_func(binary_addr, Register, Memory);
-        }    
-        else if (opcode == "001010") {
-            cout << "call XOR function..." << endl;
-            counter[2] = counter[2] + 1;    //counts instructions of type logic
-            function.XOR_func(binary_addr, Register, Memory);
-        }  
-        else if (opcode == "001011") {
-            cout << "call XOR Immediate function..." << endl;
-            counter[2] = counter[2] + 1;    //counts instructions of type logic
-            function.XORI_func(binary_addr, Register, Memory);
-        }     
-        else if (opcode == "001100") {
-            cout << "call STW Immediate function..." << endl;
-            counter[3] = counter[3] + 1;    //counts instructions of type memory
-            function.LDW_func(binary_addr, Register, Memory);
-        }  
-        else if (opcode == "001101") {
-            cout << "call STW Immediate function..." << endl;
-            counter[3] = counter[3] + 1;
-            function.STW_func(binary_addr, Register, Memory);
-        }
-        else if (opcode == "010001") {
-            cout << "Halting the program" << endl;
-            special = 1;
-            print_result(counter, Register, Memory, special);
+
+            if_imm_flag = true;
+            register_change_list(binary_addr, register_change, if_imm_flag);
         }
     }
     
@@ -634,6 +625,43 @@ string instructions_decoder(string binary_addr, int Register[], int Memory[], in
     }
 
     return result;
+}
+
+//Keep track of the change of register
+void register_change_list(string binary_addr, int register_change[], bool if_imm) {
+
+    bool if_exist_flag = false;
+    int r_reg;
+
+    //Get rd register
+    if (if_imm == false) {
+        r_reg = stoi(binary_addr.substr(16, 5), nullptr, 2);
+        
+    }
+
+    //Get rt register
+    else {
+        r_reg = stoi(binary_addr.substr(11, 5), nullptr, 2);
+    }
+
+    for (int i = 0; i < 32; i++) {
+        //cout << register_change[i] << endl;
+        if (r_reg == register_change[i]) {
+            if_exist_flag = true;
+        }
+        if (register_change[i] == -999) {
+            break;
+        }
+    }
+
+    if (if_exist_flag == false) {
+        for (int i = 0; i < 32; i++) {
+            if (register_change[i] == -999) {
+                register_change[i] = r_reg;
+                break;
+            }
+        }
+    }
 }
 /*//////////////////////////////////////////////
 This is a pipeline that looks at previous instructions
