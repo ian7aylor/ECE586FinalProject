@@ -17,7 +17,7 @@ Function Prototypes
 string get_input_file();
 string hex_decoder(string hex_addr);
 string instructions_decoder(string binary_addr,int Register[], int Memory[], int counter[], uint8_t special);
-void print_result(int counter[], int Register[], int Memory[], uint8_t special);
+int print_result(int counter[], int Register[], int Memory[], uint8_t special);
 int pipeline_sim(int rs[], int rt[], int rd[]);
 /*/////////////////////////////////////////////////////
 Instruction class with declared functions + definitions
@@ -130,19 +130,24 @@ public:
         string rs_bin = binary_addr.substr(6, 5);		//Gets binary value for 
         string rt_bin = binary_addr.substr(11, 5);
         string Imm_bin = binary_addr.substr(16, 16);
+        int Imm = 0;
 
         if (Imm_bin.substr(0, 1) == "1") {
             cout << "Negative number... Need to use 2s' complement" << endl;
+            int dec_2comp = two_complement(Imm_bin);
+            Imm = dec_2comp * (-1);
+        }
+        else {
+            Imm = stoi(Imm_bin, nullptr, 2);
         }
 
         //Convert the binary value to dec
         int rs = stoi(rs_bin, nullptr, 2);
         int rt = stoi(rt_bin, nullptr, 2);
-        int Imm = stoi(Imm_bin, nullptr, 2);
 
         //Set the value to the register, [rt] = [rs] - Imm
+        cout << "rt: " << Register[rt] << "; rs: " << Register[rs] << "; Imm: " << Imm << endl;
         Register[rt] = Register[rs] - Imm;
-
         cout << rt << ": " << Register[rt] << endl;
 
     }
@@ -156,17 +161,23 @@ public:
         string rs_bin = binary_addr.substr(6, 5);
         string rt_bin = binary_addr.substr(11, 5);
         string Imm_bin = binary_addr.substr(16, 16);
+        int Imm = 0;
 
         if (Imm_bin.substr(0, 1) == "1") {
             cout << "Negative number... Need to use 2s' complement" << endl;
+            int dec_2comp = two_complement(Imm_bin);
+            Imm = dec_2comp * (-1);
+        }
+        else {
+            Imm = stoi(Imm_bin, nullptr, 2);
         }
 
         //Convert the binary value to dec
         int rs = stoi(rs_bin, nullptr, 2);
         int rt = stoi(rt_bin, nullptr, 2);
-        int Imm = stoi(Imm_bin, nullptr, 2);
 
         //Set the value to the register, [rt] = [rs] * Imm
+        cout << "rt: " << Register[rt] << "; rs: " << Register[rs] << "; Imm: " << Imm << endl;
         Register[rt] = Register[rs] * Imm;
 
         cout << rt << ": " << Register[rt] << endl;
@@ -346,7 +357,7 @@ int main()
     for (int i = 0; i < 32; i++) {
         Register[i] = 0;
     }
-
+    
     //initialize memory array to values of 0
     for (int i = 0; i < 32768; i++) {
         Memory[i] = 0;
@@ -382,7 +393,7 @@ int main()
 /*////////////////////////////////////////////////////
 Prints the final results of the pipeline
 */////////////////////////////////////////////////////
-void print_result(int counter[], int Register[], int Memory[], uint8_t special) {
+int print_result(int counter[], int Register[], int Memory[], uint8_t special) {
 
     cout << "\n**** Instructions count summary ****" << endl;
     cout << "Total number of instructions: " << counter[0] << endl;
@@ -396,7 +407,7 @@ void print_result(int counter[], int Register[], int Memory[], uint8_t special) 
 
     cout <<"Program counter: " << endl;
     for (int i = 0; i < 32; i++) {
-        if (Register[i] != 0){
+        if (Register[i] != null){
             cout << "R" << i << ": " << Register[i] << endl; 
         }
     }
