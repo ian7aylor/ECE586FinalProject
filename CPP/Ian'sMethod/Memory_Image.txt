@@ -1,0 +1,35 @@
+
+ ****Instructions count summary ****
+Total number of instructions: 76
+Total number of arithmetic instructions: 14
+Total number of logical instructions : 3
+Total number of memory instructions: 3
+Total number of control transfer instructions: 4
+
+Final Register State:
+Program counter: 85
+R0: 0
+R1: 1004
+R2: 5100
+R3: 0
+R4: 0
+R5: 0
+R6: 0
+R7: 0
+R8: 0
+R9: 0
+R10: 1
+R11: 50
+R12: 32
+
+Final Memory State: 
+Address: 22538 ,Contents: 5096
+
+***Timing Simulator***
+Without Forwarding:
+Total stalls: 
+Total number of clock cycles
+With Forwarding:
+Total stalls: 
+Total number of clock cycles
+Program was Halted
