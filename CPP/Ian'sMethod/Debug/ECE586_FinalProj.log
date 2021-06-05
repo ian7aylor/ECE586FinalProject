@@ -1,6 +1,6 @@
 ﻿  ECE586_FinalProject.cpp
   The contents of <filesystem> are available only with C++17 or later.
-C:\Learning\GI_CQ\Spring2021\ECE586_CompArch\ECE586FinalProject\CPP\Ian'sMethod\ECE586_FinalProject.cpp(56,27): warning C4018: '<': signed/unsigned mismatch
-C:\Learning\GI_CQ\Spring2021\ECE586_CompArch\ECE586FinalProject\CPP\Ian'sMethod\ECE586_FinalProject.cpp(564,9): warning C4101: 'CC': unreferenced local variable
-C:\Learning\GI_CQ\Spring2021\ECE586_CompArch\ECE586FinalProject\CPP\Ian'sMethod\ECE586_FinalProject.cpp(564,13): warning C4101: 'stall': unreferenced local variable
+C:\Learning\GI_CQ\Spring2021\ECE586_CompArch\ECE586FinalProject\CPP\Ian'sMethod\ECE586_FinalProject.cpp(59,27): warning C4018: '<': signed/unsigned mismatch
+C:\Learning\GI_CQ\Spring2021\ECE586_CompArch\ECE586FinalProject\CPP\Ian'sMethod\ECE586_FinalProject.cpp(447,31): warning C4018: '<': signed/unsigned mismatch
+C:\Learning\GI_CQ\Spring2021\ECE586_CompArch\ECE586FinalProject\CPP\Ian'sMethod\ECE586_FinalProject.cpp(1272,22): warning C4101: 'function': unreferenced local variable
   ECE586_FinalProj.vcxproj -> C:\Learning\GI_CQ\Spring2021\ECE586_CompArch\ECE586FinalProject\CPP\Ian'sMethod\Debug\ECE586_FinalProj.exe

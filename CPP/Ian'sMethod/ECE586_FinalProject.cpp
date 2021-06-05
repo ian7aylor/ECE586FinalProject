@@ -16,11 +16,14 @@ Function Prototypes
 *////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 string get_input_file();
 string hex_decoder(string hex_addr);
-int instructions_decoder(string binary_addr,int Register[], int Memory[], int counter[], int register_change[], int memory_change[], uint8_t special, int PC);
-void print_result(int counter[], int Register[], int Memory[],int register_change[], int memory_change[], uint8_t special, int PC);
+int instructions_decoder(string binary_addr, int Register[], int Memory[], int counter[], int register_change[], int memory_change[], uint8_t special, int PC, string DynamicPCArray[]);
+void print_result(int counter[], int Register[], int Memory[], int register_change[], int memory_change[], uint8_t special, int PC);
 void register_change_list(string binary_addr, int register_change[], bool if_imm);
-void memory_change_list(string binary_addr,int Register[], int register_change[]);
+void memory_change_list(string binary_addr, int Register[], int register_change[]);
 void pipe_check(void);
+void timing_sumlator_without_fwd(string binary_code, int Register[], int register_tracking[], int& CC_without_fwd, int& stall_by_RAW_without_fwd, int& stall_by_branch_without_fwd, int& stall_by_RAW_without_fwd_counter, int& stall_by_branch_without_fwd_counter);
+void register_tracking_func(int register_tracking[], int r_des, bool stall_by_2, bool stall_by_1);
+void timing_sumlator_fwd(string binary_code, int Register[], int register_tracking_fwd[], int& CC_fwd, int& stall_by_RAW_fwd, int& stall_by_RAW_fwd_counter, int& stall_by_branch_fwd, int& stall_by_branch_fwd_counter, bool& stw_fwd_flag);
 
 /*////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Instruction class with declared functions + definitions
@@ -61,8 +64,9 @@ public:
                 bin_16b[i] = '1';
             }
         }
-
+        cout << "bin_16b" << endl;
         int dec_16b_1comp = stoi(bin_16b, nullptr, 2);
+        cout << dec_16b_1comp << endl;
         int dec_16b_2comp = dec_16b_1comp + 1;
 
         return dec_16b_2comp;
@@ -91,7 +95,7 @@ public:
             Register[rd] = Register[rs] + Register[rt];
         }
         //Print operands and result
-        cout << "rd: " << Register[rd] << "; rs: " << Register[rs] << "; rt: " << Register[rt] << endl;
+        cout << "r" << rd << ": " << Register[rd] << "; r" << rs << ": " << Register[rs] << "; r" << rt << ": " << Register[rt] << endl;
     }
     /*/////////////////////////////////////////////////////////////
     Subtraction function of values in two registers
@@ -114,7 +118,7 @@ public:
             Register[rd] = Register[rs] - Register[rt];
         }
         //Print operands and result
-        cout << "rd: " << Register[rd] << "; rs: " << Register[rs] << "; rt: " << Register[rt] << endl;
+        cout << "r" << rd << ": " << Register[rd] << "; r" << rs << ": " << Register[rs] << "; r" << rt << ": " << Register[rt] << endl;
     }
     /*/////////////////////////////////////////////////////////////
     Multiplication function of values in two registers
@@ -137,7 +141,7 @@ public:
             Register[rd] = Register[rs] * Register[rt];
         }
         //Print operands and result
-        cout << "rd: " << Register[rd] << "; rs: " << Register[rs] << "; rt: " << Register[rt] << endl;
+        cout << "r" << rd << ": " << Register[rd] << "; r" << rs << ": " << Register[rs] << "; r" << rt << ": " << Register[rt] << endl;
     }
     /*/////////////////////////////////////////////////////////////
     Add Immediate function. Adds value in one register with an immediate value
@@ -170,7 +174,7 @@ public:
             Register[rt] = Register[rs] + Imm;
         }
         //Print operands and results
-        cout << "rt: " << Register[rt] << "; rs: " << Register[rs] << "; Imm: " << Imm << endl;
+        cout << "r" << rt << ": " << Register[rt] << "; r" << rs << ": " << Register[rs] << "; Imm: " << Imm << endl;
 
     }
     /*/////////////////////////////////////////////////////////////
@@ -205,7 +209,7 @@ public:
         }
 
         //Print operands and results
-        cout << "rt: " << Register[rt] << "; rs: " << Register[rs] << "; Imm: " << Imm << endl;
+        cout << "r" << rt << ": " << Register[rt] << "; r" << rs << ": " << Register[rs] << "; Imm: " << Imm << endl;
 
     }
     /*/////////////////////////////////////////////////////////////
@@ -240,7 +244,7 @@ public:
         }
 
         //Print operands and results
-        cout << "rt: " << Register[rt] << "; rs: " << Register[rs] << "; Imm: " << Imm << endl;
+        cout << "r" << rt << ": " << Register[rt] << "; r" << rs << ": " << Register[rs] << "; Imm: " << Imm << endl;
 
     }
 
@@ -276,7 +280,7 @@ public:
         }
 
         //Print operands and result
-        cout << "rd: " << Register[rd] << "; rs: " << Register[rs] << "; rt: " << Register[rt] << endl;
+        cout << "r" << rd << ": " << Register[rd] << "; r" << rs << ": " << Register[rs] << "; r" << rt << ": " << Register[rt] << endl;
     }
     /*/////////////////////////////////////////////////////////////
     OR Immediate function. ORs value in one register with an immediate value
@@ -301,7 +305,7 @@ public:
         }
 
         //Print operands and results
-        cout << "rt: " << Register[rt] << "; rs: " << Register[rs] << "; Imm: " << Imm << endl;
+        cout << "r" << rt << ": " << Register[rt] << "; r" << rs << ": " << Register[rs] << "; Imm: " << Imm << endl;
     }
     /*/////////////////////////////////////////////////////////////
     AND function. ANDs values of in 2 registers
@@ -325,7 +329,7 @@ public:
         }
 
         //Print operands and result
-        cout << "rd: " << Register[rd] << "; rs: " << Register[rs] << "; rt: " << Register[rt] << endl;
+        cout << "r" << rd << ": " << Register[rd] << "; r" << rs << ": " << Register[rs] << "; r" << rt << ": " << Register[rt] << endl;
     }
     /*/////////////////////////////////////////////////////////////
     AND Immediate function. ORs value in one register with an immediate value
@@ -349,7 +353,7 @@ public:
         }
 
         //Print operands and result
-        cout << "rt: " << Register[rt] << "; rs: " << Register[rs] << "; Imm: " << Imm << endl;
+        cout << "r" << rt << ": " << Register[rt] << "; r" << rs << ": " << Register[rs] << "; Imm: " << Imm << endl;
     }
     /*/////////////////////////////////////////////////////////////
     XOR function. XORs values of in 2 registers
@@ -373,7 +377,7 @@ public:
         }
 
         //Print operands and result
-        cout << "rd: " << Register[rd] << "; rs: " << Register[rs] << "; rt: " << Register[rt] << endl;
+        cout << "r" << rd << ": " << Register[rd] << "; r" << rs << ": " << Register[rs] << "; r" << rt << ": " << Register[rt] << endl;
     }
     /*/////////////////////////////////////////////////////////////
     XOR Immediate function. ORs value in one register with an immediate value
@@ -397,7 +401,7 @@ public:
         }
 
         //Print operands and result
-        cout << "rt: " << Register[rt] << "; rs: " << Register[rs] << "; Imm: " << Imm << endl;
+        cout << "r" << rt << ": " << Register[rt] << "; r" << rs << ": " << Register[rs] << "; Imm: " << Imm << endl;
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -409,7 +413,7 @@ public:
     LDW function. Reads value from memory address (that is stored in register)
     and writes value to a register
     *//////////////////////////////////////////////////////////////	
-    void LDW_func(string binary_addr, int Register[], int Memory[]) {
+    void LDW_func(string binary_addr, int Register[], int Memory[], string DynamicPCArray[]) {
         //Get instruction decoder
         string rs_bin = binary_addr.substr(6, 5);		//Gets rs binary string from binary instruction
         string rt_bin = binary_addr.substr(11, 5);		//Gets rt binary string from binary instruction
@@ -418,16 +422,55 @@ public:
         //Convert the binary value to dec
         int rs = stoi(rs_bin, nullptr, 2); 		    //Gets rs binary string from binary instruction
         int rt = stoi(rt_bin, nullptr, 2);          //takes binary string and turns to an integer
-        int Imm = stoi(Imm_bin, nullptr, 2);          //takes binary string and turns to an integer
 
-       //register 0 must remain a value of 0. It cannot be changed in MIPS
+        int Imm = 0;
+
+        if (Imm_bin.substr(0, 1) == "1") {
+            cout << "Negative number... Need to use 2s' complement" << endl;
+            int dec_2comp = two_complement(Imm_bin);
+            Imm = dec_2comp * (-1);      //Sets integer to negative value
+        }
+        else {
+            Imm = stoi(Imm_bin, nullptr, 2);      //takes binary string and turns to an integer
+        }
+
+        //register 0 must remain a value of 0. It cannot be changed in MIPS
         if (rt != 0) {
             //Set the value to the register, [rt] = Mem[[rs] + Imm]
-            Register[rt] = Memory[Register[rs] + Imm];
+            cout << rs << endl;
+            cout << Register[rs] << endl;
+            cout << "Imm: " << Imm << endl;
+            int memory_address = (Register[rs] + Imm) / 4;
+            cout << "Memory: " << memory_address << endl;
+            string memory_data = DynamicPCArray[memory_address];
+
+            for (int i = 0; i < memory_data.length(); i++) {
+
+                memory_data[i] = toupper(memory_data[i]);
+            }
+
+
+            cout << memory_data << endl;
+            string bin_ldw = hex_decoder(memory_data);
+            cout << bin_ldw << endl;
+            int mem_data_dec = 0;
+
+            if (bin_ldw.substr(0, 1) == "1") {
+                cout << "Negative number... Need to use 2s' complement" << endl;
+                int dec_2comp = two_complement(bin_ldw);
+                mem_data_dec = dec_2comp * (-1);      //Sets integer to negative value
+            }
+            else {
+                mem_data_dec = stoi(bin_ldw, nullptr, 2);      //takes binary string and turns to an integer
+            }
+
+            cout << mem_data_dec << endl;
+
+            Register[rt] = mem_data_dec;
         }
 
         //Print operands and result
-        cout << "R" << rt << ": " << Register[rt] << ";LW from Mem Address: " << Memory[Register[rs] + Imm] << endl;
+        cout << "R" << rt << ": " << Register[rt] << ";LW from Mem Address R" << rs << " + " << Imm << " : " << Register[rs] + Imm << endl;
     }
     /*/////////////////////////////////////////////////////////////
     STW function. Writes value in one register to the memory address
@@ -442,7 +485,17 @@ public:
         //Convert the binary value to dec
         int rs = stoi(rs_bin, nullptr, 2);          //takes binary string and turns to an integer
         int rt = stoi(rt_bin, nullptr, 2);          //takes binary string and turns to an integer
-        int Imm = stoi(Imm_bin, nullptr, 2);          //takes binary string and turns to an integer
+
+        int Imm = 0;
+
+        if (Imm_bin.substr(0, 1) == "1") {
+            cout << "Negative number... Need to use 2s' complement" << endl;
+            int dec_2comp = two_complement(Imm_bin);
+            Imm = dec_2comp * (-1);      //Sets integer to negative value
+        }
+        else {
+            Imm = stoi(Imm_bin, nullptr, 2);      //takes binary string and turns to an integer
+        }
 
         //Set the value to the register, Mem[[rs] + Imm] = [rt]
         Memory[Register[rs] + Imm] = Register[rt];
@@ -462,7 +515,7 @@ public:
         STW function. Writes value in one register to the memory address
         that is stored in another register
         *//////////////////////////////////////////////////////////////	
-    int BZ_func(string binary_addr, int Register[], int PC){
+    int BZ_func(string binary_addr, int Register[], int PC) {
         //Get instruction decoder
         string rs_bin = binary_addr.substr(6, 5);		//Gets rs binary string from binary instruction
         string Imm_bin = binary_addr.substr(16, 16);		//Gets Imm binary string from binary instruction
@@ -481,9 +534,9 @@ public:
 
         //If contents of rs equal 0, update the PC with the immediate value
         if (Register[rs] == 0) {
-            PC += Imm;
+            PC = PC + Imm - 1;
             cout << "R[" << rs << "]: " << Register[rs];               //should say 0
-            cout << " New PC: " << PC << endl;           //New program counter based on the immediate value + PC
+            cout << " New PC: " << PC + 1 << endl;           //New program counter based on the immediate value + PC
         }
         else {
             cout << "R[" << rs << "]!= 0;";               //should say 0
@@ -500,7 +553,7 @@ public:
         string rs_bin = binary_addr.substr(6, 5);		//Gets rs binary string from binary instruction
         string rt_bin = binary_addr.substr(11, 5);		//Gets rt binary string from binary instruction
         string Imm_bin = binary_addr.substr(16, 16);		//Gets Imm binary string from binary instruction
-       
+
         int Imm = 0;
         if (Imm_bin.substr(0, 1) == "1") {
             cout << "Negative number... Need to use 2s' complement" << endl;
@@ -514,16 +567,18 @@ public:
         int rs = stoi(rs_bin, nullptr, 2);          //takes binary string and turns to an integer
         int rt = stoi(rt_bin, nullptr, 2);          //takes binary string and turns to an integer
 
+        cout << "rs: " << Register[rs] << ". rt: " << Register[rt] << endl;
         //If contents of rs equal contents of rt, update the PC with the immediate value
         if (Register[rs] == Register[rt]) {
-            PC += Imm;
+            PC = PC + Imm - 1;
             cout << "R[" << rs << "]" << "equals R[" << rt << "] = " << Register[rs];
-            cout << " New PC: " << PC << endl;;
+            cout << " New PC: " << PC + 1 << endl;;
         }
         else {
             cout << "R[" << rs << "]" << "!= R[" << rt << "];";
             cout << " PC: " << PC << endl;
         }
+
         return PC;
     }
     /*/////////////////////////////////////////////////////////////
@@ -538,7 +593,9 @@ public:
         int rs = stoi(rs_bin, nullptr, 2);          //takes binary string and turns to an integer
 
         PC = Register[rs];
-        cout << "New PC: " << PC << endl;;
+        PC = PC / 4;
+        cout << "New PC: " << PC << endl;
+        PC = PC - 1;
         return PC;
     }
 };
@@ -549,25 +606,45 @@ public:
 Main Function:
 
 *////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-int main(){
+int main() {
     //#pragma comment(linker, "/STACK:8000000")
     string test_line;
     string user_test_file;
     ifstream inFile;
     ofstream test, PCprint, MemImageOutput;
     string binary_code;
-    int Register [32];          //Holds register values, register 0 cannot be written to
+    int Register[32];          //Holds register values, register 0 cannot be written to
     int Memory[32768];          //Holds memory values  
     int register_change[32];
     int memory_change[32768];
     int counter[5];             //Keeps track of type of instructions
-    int CC, stall;              //Keeps
     uint8_t special = 0;        //tells print whether it is a halt or not. Initialize to 0
-    
+    int register_tracking[5];
+    int register_tracking_fwd[5];
+
     //PC 
-    string *DynamicPCArray;      //Points to a address which holds string data.
+    string DynamicPCArray[1024];      //Points to a address which holds string data.
     int PC = -1;                 //Initializes program counter
     int ProgramEnd;             //Integer that holds total length of PC
+
+    //Timing simulator
+    int CC_without_fwd = 0;
+    int CC_with_fwd = 0;
+    int stall_by_RAW_without_fwd = 0;
+    int stall_by_branch_without_fwd = 0;
+    int stall_by_RAW_without_fwd_counter = 0;
+    int stall_by_branch_without_fwd_counter = 0;
+
+    //CC_fwd, stall_by_RAW_fwd, stall_by_RAW_fwd_counter, stall_by_branch_fwd, stall_by_branch_fwd_counter
+
+    int CC_fwd = 0;
+    int stall_by_RAW_fwd = 0;
+    int stall_by_RAW_fwd_counter = 0;
+    int stall_by_branch_fwd = 0;
+    int stall_by_branch_fwd_counter = 0;
+    bool stw_fwd_flag = false;
+
+
 
     //initialize register array to values of 0
     for (int i = 0; i < 32; i++) {
@@ -586,6 +663,16 @@ int main(){
         counter[i] = 0;         //initialize all instruction type counters to 0
     }
 
+    //initialize register tracking array
+    for (int i = 0; i < 5; i++) {
+        register_tracking[i] = -999;         //initialize all instruction type counters to 0
+    }
+
+    //initialize register tracking array
+    for (int i = 0; i < 5; i++) {
+        register_tracking_fwd[i] = -999;         //initialize all instruction type counters to 0
+    }
+
     /*/////////////////////////////////////////////////////////////
     This section is where the program grabs the list of instructions
     And stores the instructions in a instruction memory array
@@ -595,10 +682,10 @@ int main(){
     *//////////////////////////////////////////////////////////////	
     user_test_file = get_input_file();	//user input file - gets user test file
     inFile.open(user_test_file);		//opens user test file
-	
+
     //This gets the length of the program in single integer values
     //true PC is PC * 4
-    while (!inFile.eof()){
+    while (!inFile.eof()) {
         inFile >> test_line;
         if (!inFile.eof()) {
             if (PC >= 0) {
@@ -609,17 +696,18 @@ int main(){
             }
         }
     }
+    PC = PC + 1;
     ProgramEnd = PC;            //We count 0 as the PC start. Subtract 1 because the above while loop adds 1 more and if it does not get a line then ends. Need to remove the last read.
     cout << "Address seen as single bits: 0 to " << ProgramEnd << endl;  //Prints the total array address spce. This is the range used to access
-    cout << "Total Program Addresses:0 to " << ProgramEnd*4 << endl;     //Print the total program end from 0 - Program End
-    cout << "Total Program Memory Space is:0 to" << (ProgramEnd + 1) * 4 << endl;       //Shows total memory space.
+    cout << "Total Program Addresses:0 to " << ProgramEnd * 4 << endl;     //Print the total program end from 0 - Program End
+    cout << "Total Program Memory Space is:0 to " << (ProgramEnd + 1) * 4 << endl;       //Shows total memory space.
     /*/////////////////////////////////////////////////////////////
     Create the new array given the total length of the program
       This will allow us to go back and forth in the program when
       branching
     *///////////////////////////////////////////////////////////
-    DynamicPCArray = new string[ProgramEnd];
-   
+    //DynamicPCArray = new string[ProgramEnd];
+
     /*////////////////////////////////////
     //Debugging
    for (PC = 0; PC <= ProgramEnd; PC++) {
@@ -630,13 +718,13 @@ int main(){
     //sets file back to the start to prepare for reading into our new array
     inFile.clear();
     inFile.seekg(0);
-    
+
     test.open("test.txt");
     PCprint.open("PCTest.txt");
     //Reading strings into 
     for (PC = 0; PC <= ProgramEnd; PC++) {
         inFile >> test_line;
-        if(!inFile.eof()){
+        if (!inFile.eof()) {
             DynamicPCArray[PC] = test_line;
             test << DynamicPCArray[PC] << endl;
         }
@@ -647,8 +735,11 @@ int main(){
 
     //start at beginning of the program and read in the values
     for (PC = 0; PC <= ProgramEnd; PC++) {
+        cout << "-----------------------------" << endl;
+        cout << "PC: " << PC << endl;
+        cout << "Trace: " << DynamicPCArray[PC] << endl;
         binary_code = hex_decoder(DynamicPCArray[PC]);		//Calls on hex_decoder and returns the binary code for that line
-        cout << binary_code << endl;		//Prints the binary code for that line
+        //cout << binary_code << endl;		//Prints the binary code for that line
 
         //Get the total number of instructions counter[0]
         //Get the total number of arithmetic instructions counter[1]
@@ -657,7 +748,57 @@ int main(){
         //Get the total number of control transfer instructions counter[4] 
         counter[0] = counter[0] + 1;	//Keeps track of total instructions
 
-       PC = instructions_decoder(binary_code, Register, Memory, counter, register_change, memory_change, special, PC);
+        if (binary_code.substr(0, 6) == "010001") {
+
+            cout << "******* NON FORWARDING TIMING ********" << endl;
+            cout << "CC_without_fwd: " << CC_without_fwd + 5 << endl;
+            cout << "stall_by_RAW_without_fwd: " << stall_by_RAW_without_fwd << endl;
+            cout << "stall_by_RAW_without_fwd_counter: " << stall_by_RAW_without_fwd_counter << endl;
+            cout << "stall_by_branch_without_fwd: " << stall_by_branch_without_fwd << endl;
+            cout << "stall_by_branch_without_fwd_counter: " << stall_by_branch_without_fwd_counter << endl;
+            cout << "\n" << endl;
+            cout << "=========================================================" << endl;
+            cout << "******* FORWARDING TIMING ********" << endl;
+            cout << "CC_fwd: " << CC_fwd + 5 << endl;
+            cout << "stall_by_RAW_fwd: " << stall_by_RAW_fwd << endl;
+            cout << "stall_by_RAW_fwd_counter: " << stall_by_RAW_fwd_counter << endl;
+            cout << "stall_by_branch_fwd: " << stall_by_branch_fwd << endl;
+            cout << "stall_by_branch_fwd_counter: " << stall_by_branch_fwd_counter << endl;
+
+            cout << "=============================================================" << endl;
+            cout << "Speedup achieved by forwarding as compared to non-forwarding: " << CC_without_fwd - CC_fwd << endl;
+            cout << "\n" << endl;
+        }
+
+
+        PC = instructions_decoder(binary_code, Register, Memory, counter, register_change, memory_change, special, PC, DynamicPCArray);
+
+        timing_sumlator_without_fwd(binary_code, Register, register_tracking, CC_without_fwd, stall_by_RAW_without_fwd, stall_by_RAW_without_fwd_counter, stall_by_branch_without_fwd, stall_by_branch_without_fwd_counter);
+
+        timing_sumlator_fwd(binary_code, Register, register_tracking_fwd, CC_fwd, stall_by_RAW_fwd, stall_by_RAW_fwd_counter, stall_by_branch_fwd, stall_by_branch_fwd_counter, stw_fwd_flag);
+
+        //for (int i = 0; i < 5; i++) {
+        //    cout << i << ": " << register_tracking[i] << endl;
+        //}
+        //cout << "CC_fwd: " << CC_fwd << endl;
+        //cout << "stall_by_RAW_fwd: " << stall_by_RAW_fwd << endl;
+        //cout << "stall_by_RAW_fwd_counter: " << stall_by_RAW_fwd_counter << endl;
+        //cout << "stall_by_branch_fwd: " << stall_by_branch_fwd << endl;
+        //cout << "stall_by_branch_fwd_counter: " << stall_by_branch_fwd_counter << endl;
+
+        //for (int i = 0; i < 32; i++) {
+        //    if (register_change[i] != -999) {
+        //        cout << "R" << register_change[i] << ": " << Register[register_change[i]] << endl;                //prints to console
+                //Memory_Image << "R" << register_change[i] << ": " << Register[register_change[i]] << endl;        //prints to .txt file
+        //   }
+        //}
+
+
+
+        //Print Program Counter
+        //string text = "Program counter: ";
+        //cout << text << PC << endl;
+
     }
     print_result(counter, Register, Memory, register_change, memory_change, special, PC);
 }
@@ -665,7 +806,7 @@ int main(){
 /*////////////////////////////////////////////////////
 Prints the final results of the pipeline
 */////////////////////////////////////////////////////
-void print_result(int counter[], int Register[], int Memory[],int register_change[], int memory_change[], uint8_t special, int PC) {
+void print_result(int counter[], int Register[], int Memory[], int register_change[], int memory_change[], uint8_t special, int PC) {
     ofstream Memory_Image;
     string text;        //what to write to conole and txt file
 
@@ -684,7 +825,7 @@ void print_result(int counter[], int Register[], int Memory[],int register_chang
     text = "Total number of arithmetic instructions: ";
     cout << text << counter[1] << endl;
     Memory_Image << text << counter[1] << endl;
-    
+
     //4th line
     text = "Total number of logical instructions : ";
     cout << text << counter[2] << endl;
@@ -707,16 +848,15 @@ void print_result(int counter[], int Register[], int Memory[],int register_chang
 
     //Print Program Counter
     text = "Program counter: ";
-    cout << text << PC << endl;
-    Memory_Image << text << PC << endl;
-    
+    cout << text << (PC + 1) * 4 << endl;
+    Memory_Image << text << (PC + 1) * 4 << endl;
+
     for (int i = 0; i < 32; i++) {
-        if (register_change[i] != -999){
-            cout << "R" << i << ": " << Register[i] << endl;                //prints to console
-            Memory_Image << "R" << i << ": " << Register[i] << endl;        //prints to .txt file
+        if (register_change[i] != -999) {
+            cout << "R" << register_change[i] << ": " << Register[register_change[i]] << endl;                //prints to console
+            Memory_Image << "R" << register_change[i] << ": " << Register[register_change[i]] << endl;        //prints to .txt file
         }
     }
-
 
     text = "\nFinal Memory State: ";
     cout << text << endl;
@@ -757,7 +897,7 @@ void print_result(int counter[], int Register[], int Memory[],int register_chang
     Memory_Image << text << endl;
 
     //If program is halted
-    if (special == 1){
+    if (special == 1) {
         text = "Program was Halted";
         cout << text << endl;
         Memory_Image << text << endl;
@@ -774,14 +914,14 @@ string get_input_file() {
 
     cout << "Please enter a valid test file:\n";
     //cin >> input_file;
-    input_file = "C:/Learning/GI_CQ/Spring2021/ECE586_CompArch/ECE586FinalProject/CPP/Ian'sMethod/logic_image.txt";
+    input_file = "C:/Learning/GI_CQ/Spring2021/ECE586_CompArch/ECE586FinalProject/CPP/Ian'sMethod/TA_sample_memory_image_final.txt";
     //input C:\Users\taipham\source\repos\ECE586_FinalProject\sample_memory_image.txt
     cout << "Input file: " << input_file << endl;     //Write out the input file
 
 
     bool file_flag = true;		//Set a flag
-	
-	//Check if file has valid data, if valid set file_flag to false and ask for valid file location
+
+    //Check if file has valid data, if valid set file_flag to false and ask for valid file location
     while (file_flag) {
         ifstream f(input_file.c_str());		//Read from this file
         if (!(f.good())) {
@@ -888,15 +1028,15 @@ string hex_decoder(string hex_addr) {
 /*////////////////////////////////////////////////////
 Instruction decoder stage
 */////////////////////////////////////////////////////
-int instructions_decoder(string binary_addr, int Register[], int Memory[], int counter[],int register_change[], int memory_change[], uint8_t special, int PC) {
+int instructions_decoder(string binary_addr, int Register[], int Memory[], int counter[], int register_change[], int memory_change[], uint8_t special, int PC, string DynamicPCArray[]) {
     instructions_exe function;		//instruction object
     string result;
     bool if_imm_flag = false;
-	
-	//Checking if instruction is valid before proceeding
+
+    //Checking if instruction is valid before proceeding
     if (binary_addr != "00000000000000000000000000000000") {
         string opcode = binary_addr.substr(0, 6);
-		//Checking if an arithmetic instruction
+        //Checking if an arithmetic instruction
         if (opcode == "000000") {
             cout << "call ADD function..." << endl;
             counter[1] = counter[1] + 1;    //counts instructions of type arithmetic
@@ -956,7 +1096,7 @@ int instructions_decoder(string binary_addr, int Register[], int Memory[], int c
         }
         else if (opcode == "000111") {
             //ORI instruction
-            cout << "call OR Immediate function..." << endl;
+            cout << "call ORI Immediate function..." << endl;
             counter[2] = counter[2] + 1;    //counts instructions of type arithmetic
             function.ORI_func(binary_addr, Register, Memory);
 
@@ -974,7 +1114,7 @@ int instructions_decoder(string binary_addr, int Register[], int Memory[], int c
         }
         else if (opcode == "001001") {
             //AND Immediate instruction
-            cout << "call AND Immediate function..." << endl;
+            cout << "call ANDI Immediate function..." << endl;
             counter[2] = counter[2] + 1;    //counts instructions of type arithmetic
             function.ANDI_func(binary_addr, Register, Memory);
 
@@ -992,7 +1132,7 @@ int instructions_decoder(string binary_addr, int Register[], int Memory[], int c
         }
         else if (opcode == "001011") {
             //XOR Immediate instruction
-            cout << "call XOR Immediate function..." << endl;
+            cout << "call XORI Immediate function..." << endl;
             counter[2] = counter[2] + 1;    //counts instructions of type arithmetic
             function.XORI_func(binary_addr, Register, Memory);
 
@@ -1004,7 +1144,7 @@ int instructions_decoder(string binary_addr, int Register[], int Memory[], int c
             //LDW instruction
             cout << "call LDW function..." << endl;
             counter[3] = counter[3] + 1;    //counts instructions of type arithmetic
-            function.LDW_func(binary_addr, Register, Memory);
+            function.LDW_func(binary_addr, Register, Memory, DynamicPCArray);
 
             if_imm_flag = true;
             register_change_list(binary_addr, register_change, if_imm_flag);
@@ -1014,7 +1154,7 @@ int instructions_decoder(string binary_addr, int Register[], int Memory[], int c
             cout << "call STW function..." << endl;
             counter[3] = counter[3] + 1;    //counts instructions of type arithmetic
             function.STW_func(binary_addr, Register, Memory);
-            
+
             memory_change_list(binary_addr, Register, memory_change);
         }
         //Control Operations
@@ -1035,7 +1175,7 @@ int instructions_decoder(string binary_addr, int Register[], int Memory[], int c
             cout << "Call JR function..." << endl;
             PC = function.JR_func(binary_addr, Register, PC);
             counter[4] = counter[4] + 1;    //counts instructions of type Control
-        }       
+        }
         else if (opcode == "010001") {
             //Halt instruction
             cout << "Halting Program..." << endl;
@@ -1061,7 +1201,7 @@ void register_change_list(string binary_addr, int register_change[], bool if_imm
     //Get rd register
     if (if_imm == false) {
         r_reg = stoi(binary_addr.substr(16, 5), nullptr, 2);
-        
+
     }
 
     //Get rt register
@@ -1081,8 +1221,10 @@ void register_change_list(string binary_addr, int register_change[], bool if_imm
 
     if (if_exist_flag == false) {
         for (int i = 0; i < 32; i++) {
+            //cout << "r: " << register_change[i] << endl;
             if (register_change[i] == -999) {
                 register_change[i] = r_reg;
+                //cout << "register change: " << r_reg << endl;
                 break;
             }
         }
@@ -1091,7 +1233,7 @@ void register_change_list(string binary_addr, int register_change[], bool if_imm
 
 
 /*//////////////////////////////////////////////////////////////////////////////////
-Keep track of the change in memory values 
+Keep track of the change in memory values
 *//////////////////////////////////////////////////////////////////////////////////
 void memory_change_list(string binary_addr, int Register[], int memory_change[]) {
 
@@ -1101,7 +1243,7 @@ void memory_change_list(string binary_addr, int Register[], int memory_change[])
 
     rreg = stoi(binary_addr.substr(6, 5), nullptr, 2);        //get source register
     IMM = stoi(binary_addr.substr(16, 16), nullptr, 2);       //Get immediate value for adding to the source register contents
-    
+
 
     m_mem = Register[rreg] + IMM;       //Memory address = Target Register contents
 
@@ -1118,12 +1260,545 @@ void memory_change_list(string binary_addr, int Register[], int memory_change[])
         for (int i = 0; i < 32768; i++) {
             if (memory_change[m_mem] == -999) {
                 memory_change[m_mem] = m_mem;
-                //cout << m_mem << endl;
+                cout << m_mem << endl;
                 break;
             }
         }
     }
 }
+
+// Keep track of number of cycles without using forwarding
+void timing_sumlator_without_fwd(string binary_addr, int Register[], int register_tracking[], int& CC_without_fwd, int& stall_by_RAW_without_fwd, int& stall_by_RAW_without_fwd_counter, int& stall_by_branch_without_fwd, int& stall_by_branch_without_fwd_counter) {
+    instructions_exe function;		//instruction object
+    string result;
+    bool stall_by_2 = false;
+    bool stall_by_1 = false;
+    int latest_data = 4;
+
+    //Checking if instruction is valid before proceeding
+    if (binary_addr != "00000000000000000000000000000000") {
+        string opcode = binary_addr.substr(0, 6);
+
+        for (int i = 0; i < 5; i++) {
+            if (register_tracking[i] == -999) {
+                latest_data = i - 1;
+                break;
+            }
+        }
+
+        //Checking if an instruction is ADD; SUB; MUL; OR; AND; and XOR
+        if (opcode == "000000" || opcode == "000010" || opcode == "000100" || opcode == "000110" || opcode == "001000" || opcode == "001010") {
+
+            string rs_bin = binary_addr.substr(6, 5);		//Gets rs binary string from binary instruction
+            string rt_bin = binary_addr.substr(11, 5);		//Gets rt binary string from binary instruction
+            string rd_bin = binary_addr.substr(16, 5);		//Gets rd binary string from binary instruction
+
+            //Convert the binary value to dec
+            int rs = stoi(rs_bin, nullptr, 2);      //takes binary string and turns to an integer
+            int rt = stoi(rt_bin, nullptr, 2);      //takes binary string and turns to an integer
+            int rd = stoi(rd_bin, nullptr, 2);      //takes binary string and turns to an integer
+
+
+            if (latest_data == -1) {
+                CC_without_fwd = CC_without_fwd + 1; // 1 per cycle
+                register_tracking_func(register_tracking, rd, stall_by_2, stall_by_1);
+            }
+
+            else if (latest_data != 0) {
+                if (rt == register_tracking[latest_data] || rs == register_tracking[latest_data]) {
+                    CC_without_fwd = CC_without_fwd + 3; //1 per cycle and 2 stalls
+                    stall_by_RAW_without_fwd = stall_by_RAW_without_fwd + 2;
+                    stall_by_RAW_without_fwd_counter = stall_by_RAW_without_fwd_counter + 1;
+                    stall_by_2 = true;
+                }
+                else if (rt == register_tracking[latest_data - 1] || rs == register_tracking[latest_data - 1]) {
+                    CC_without_fwd = CC_without_fwd + 2; // 1 per cycle and 1 stalls
+                    stall_by_RAW_without_fwd = stall_by_RAW_without_fwd + 1;
+                    stall_by_RAW_without_fwd_counter = stall_by_RAW_without_fwd_counter + 1;
+                    stall_by_1 = true;
+                }
+                else {
+                    CC_without_fwd = CC_without_fwd + 1; // 1 per cycle
+                    cout << CC_without_fwd << endl;
+                }
+                //perform register tracking
+                register_tracking_func(register_tracking, rd, stall_by_2, stall_by_1);
+
+            }
+
+            else {
+                if (rt == register_tracking[latest_data] || rs == register_tracking[latest_data]) {
+                    CC_without_fwd = CC_without_fwd + 3; //1 per cycle and 2 stalls
+                    stall_by_RAW_without_fwd = stall_by_RAW_without_fwd + 2;
+                    stall_by_RAW_without_fwd_counter = stall_by_RAW_without_fwd_counter + 1;
+                    stall_by_2 = true;
+                }
+                else {
+                    CC_without_fwd = CC_without_fwd + 1; // 1 per cycle
+                    cout << CC_without_fwd << endl;
+                }
+                //perform register tracking
+                register_tracking_func(register_tracking, rd, stall_by_2, stall_by_1);
+            }
+        }
+
+        //Checking if an instruction is ADDI; SUBI; MULI; ORI; ANDI; XORI; LDW; and STW
+        else if (opcode == "000001" || opcode == "000011" || opcode == "000101" || opcode == "000111" || opcode == "001001" || opcode == "001011" || opcode == "001100" || opcode == "001101") {
+
+            string rs_bin = binary_addr.substr(6, 5);		//Gets rs binary string from binary instruction
+            string rt_bin = binary_addr.substr(11, 5);		//Gets rt binary string from binary instruction
+
+            int rs = stoi(rs_bin, nullptr, 2);          //takes binary string and turns to an integer
+            int rt = stoi(rt_bin, nullptr, 2);          //takes binary string and turns to an integer
+
+            if (latest_data == -1) {
+                CC_without_fwd = CC_without_fwd + 1; // 1 per cycle
+                register_tracking_func(register_tracking, rt, stall_by_2, stall_by_1);
+            }
+
+            else if (latest_data != 0) {
+                if (rs == register_tracking[latest_data]) {
+                    CC_without_fwd = CC_without_fwd + 3; //1 per cycle and 2 stalls
+                    stall_by_RAW_without_fwd = stall_by_RAW_without_fwd + 2;
+                    stall_by_RAW_without_fwd_counter = stall_by_RAW_without_fwd_counter + 1;
+                    stall_by_2 = true;
+                }
+                else if (rs == register_tracking[latest_data - 1]) {
+                    CC_without_fwd = CC_without_fwd + 2; // 1 per cycle and 1 stalls
+                    stall_by_RAW_without_fwd = stall_by_RAW_without_fwd + 1;
+                    stall_by_RAW_without_fwd_counter = stall_by_RAW_without_fwd_counter + 1;
+                    stall_by_1 = true;
+                }
+                else {
+                    CC_without_fwd = CC_without_fwd + 1; // 1 per cycle
+                }
+                //perform register tracking
+                register_tracking_func(register_tracking, rt, stall_by_2, stall_by_1);
+
+            }
+
+            else {
+                if (rs == register_tracking[latest_data]) {
+                    CC_without_fwd = CC_without_fwd + 3; //1 per cycle and 2 stalls
+                    stall_by_RAW_without_fwd = stall_by_RAW_without_fwd + 2;
+                    stall_by_RAW_without_fwd_counter = stall_by_RAW_without_fwd_counter + 1;
+                    stall_by_2 = true;
+                }
+                else {
+                    CC_without_fwd = CC_without_fwd + 1; // 1 per cycle
+                }
+                //perform register tracking
+                register_tracking_func(register_tracking, rt, stall_by_2, stall_by_1);
+            }
+        }
+
+        //Checking if an instruction is branch instructions: BZ
+        else if (opcode == "001110") {
+
+            string rs_bin = binary_addr.substr(6, 5);		//Gets rs binary string from binary instruction
+            int rs = stoi(rs_bin, nullptr, 2);          //takes binary string and turns to an integer
+
+            if (rs == register_tracking[latest_data]) {
+                CC_without_fwd = CC_without_fwd + 2;
+                stall_by_RAW_without_fwd = stall_by_RAW_without_fwd + 2;
+                stall_by_RAW_without_fwd_counter = stall_by_RAW_without_fwd_counter + 1;
+
+            }
+
+            else if (rs == register_tracking[latest_data - 1]) {
+                CC_without_fwd = CC_without_fwd + 1;
+                stall_by_RAW_without_fwd = stall_by_RAW_without_fwd + 1;
+                stall_by_RAW_without_fwd_counter = stall_by_RAW_without_fwd_counter + 1;
+
+            }
+
+            if (Register[rs] == 0) {
+                CC_without_fwd = CC_without_fwd + 3;
+                stall_by_branch_without_fwd = stall_by_branch_without_fwd + 2;
+                stall_by_branch_without_fwd_counter = stall_by_branch_without_fwd_counter + 1;
+                stall_by_2 = true;
+            }
+            else {
+                CC_without_fwd = CC_without_fwd + 1; // 1 per cycle
+            }
+
+            register_tracking_func(register_tracking, -1, stall_by_2, stall_by_1);
+            if (register_tracking[0] == -999) {
+                for (int i = 0; i < 4; i++) {
+                    register_tracking[i] = register_tracking[i + 1];
+                }
+            }
+        }
+
+        //Call BEQ instruction
+        else if (opcode == "001111") {
+
+            string rs_bin = binary_addr.substr(6, 5);		//Gets rs binary string from binary instruction
+            string rt_bin = binary_addr.substr(11, 5);		//Gets rt binary string from binary instruction
+
+            int rs = stoi(rs_bin, nullptr, 2);          //takes binary string and turns to an integer
+            int rt = stoi(rt_bin, nullptr, 2);          //takes binary string and turns to an integer
+
+            if (rs == register_tracking[latest_data] || rt == register_tracking[latest_data]) {
+                CC_without_fwd = CC_without_fwd + 2;
+                stall_by_RAW_without_fwd = stall_by_RAW_without_fwd + 2;
+                stall_by_RAW_without_fwd_counter = stall_by_RAW_without_fwd_counter + 1;
+
+            }
+
+            else if (rs == register_tracking[latest_data - 1] || rt == register_tracking[latest_data - 1]) {
+                CC_without_fwd = CC_without_fwd + 1;
+                stall_by_RAW_without_fwd = stall_by_RAW_without_fwd + 1;
+                stall_by_RAW_without_fwd_counter = stall_by_RAW_without_fwd_counter + 1;
+
+            }
+
+
+            if (Register[rs] == Register[rt]) {
+                CC_without_fwd = CC_without_fwd + 3;
+                stall_by_branch_without_fwd = stall_by_branch_without_fwd + 2;
+                stall_by_branch_without_fwd_counter = stall_by_branch_without_fwd_counter + 1;
+                stall_by_2 = true;
+            }
+            else {
+                CC_without_fwd = CC_without_fwd + 1; // 1 per cycle
+            }
+
+            register_tracking_func(register_tracking, -1, stall_by_2, stall_by_1);
+            if (register_tracking[0] == -999) {
+                for (int i = 0; i < 4; i++) {
+                    register_tracking[i] = register_tracking[i + 1];
+                }
+            }
+        }
+
+        //Call JR instruction
+        else if (opcode == "010000") {
+            string rs_bin = binary_addr.substr(6, 5);		//Gets rs binary string from binary instruction
+            int rs = stoi(rs_bin, nullptr, 2);          //takes binary string and turns to an integer
+
+            CC_without_fwd = CC_without_fwd + 3;
+            stall_by_branch_without_fwd = stall_by_branch_without_fwd + 2;
+            stall_by_branch_without_fwd_counter = stall_by_branch_without_fwd_counter + 1;
+            stall_by_2 = true;
+
+            register_tracking_func(register_tracking, -1, stall_by_2, stall_by_1);
+
+            if (register_tracking[0] == -999) {
+                for (int i = 0; i < 4; i++) {
+                    register_tracking[i] = register_tracking[i + 1];
+                }
+            }
+        }
+
+        else if (opcode == "010001") {
+            //Halt instruction
+            cout << "Halting Program..." << endl;
+            CC_without_fwd = CC_without_fwd + 4;
+        }
+    }
+    else {
+        cout << "0x00000000 input... skip!" << endl;
+    }
+}
+
+
+void timing_sumlator_fwd(string binary_addr, int Register[], int register_tracking_fwd[], int& CC_fwd, int& stall_by_RAW_fwd, int& stall_by_RAW_fwd_counter, int& stall_by_branch_fwd, int& stall_by_branch_fwd_counter, bool& stw_fwd_flag) {
+    bool stall_by_1 = false;
+    bool stall_by_2 = false;
+    int latest_data = 4;
+
+    //Checking if instruction is valid before proceeding
+    if (binary_addr != "00000000000000000000000000000000") {
+        string opcode = binary_addr.substr(0, 6);
+
+        for (int i = 0; i < 5; i++) {
+            if (register_tracking_fwd[i] == -999) {
+                latest_data = i - 1;
+                break;
+            }
+        }
+
+
+        if (opcode == "000000" || opcode == "000010" || opcode == "000100" || opcode == "000110" || opcode == "001000" || opcode == "001010") {
+            string rs_bin = binary_addr.substr(6, 5);		//Gets rs binary string from binary instruction
+            string rt_bin = binary_addr.substr(11, 5);		//Gets rt binary string from binary instruction
+            string rd_bin = binary_addr.substr(16, 5);		//Gets rd binary string from binary instruction
+
+            //Convert the binary value to dec
+            int rs = stoi(rs_bin, nullptr, 2);      //takes binary string and turns to an integer
+            int rt = stoi(rt_bin, nullptr, 2);      //takes binary string and turns to an integer
+            int rd = stoi(rd_bin, nullptr, 2);      //takes binary string and turns to an integer
+
+            if (stw_fwd_flag == true) {
+                stw_fwd_flag = false;
+
+                if (latest_data == -1) {
+                    CC_fwd = CC_fwd + 1; // 1 per cycle
+                    register_tracking_func(register_tracking_fwd, rd, stall_by_2, stall_by_1);
+                }
+
+                else {
+                    if (rt == register_tracking_fwd[latest_data] || rs == register_tracking_fwd[latest_data]) {
+                        CC_fwd = CC_fwd + 2; //1 per cycle and 2 stalls
+                        stall_by_RAW_fwd = stall_by_RAW_fwd + 1;
+                        stall_by_RAW_fwd_counter = stall_by_RAW_fwd_counter + 1;
+                        stall_by_1 = true;
+                    }
+                    else {
+                        CC_fwd = CC_fwd + 1; // 1 per cycle
+                        cout << CC_fwd << endl;
+                    }
+                    //perform register tracking
+                    register_tracking_func(register_tracking_fwd, rd, stall_by_2, stall_by_1);
+
+                }
+            }
+
+            else {
+                CC_fwd = CC_fwd + 1;
+                register_tracking_func(register_tracking_fwd, rt, stall_by_2, stall_by_1);
+            }
+
+        }
+
+        else if (opcode == "000001" || opcode == "000011" || opcode == "000101" || opcode == "000111" || opcode == "001001" || opcode == "001011" || opcode == "001100" || opcode == "001101") {
+            string rs_bin = binary_addr.substr(6, 5);		//Gets rs binary string from binary instruction
+            string rt_bin = binary_addr.substr(11, 5);		//Gets rt binary string from binary instruction
+
+            int rs = stoi(rs_bin, nullptr, 2);          //takes binary string and turns to an integer
+            int rt = stoi(rt_bin, nullptr, 2);          //takes binary string and turns to an integer
+
+            CC_fwd = CC_fwd + 1;
+            register_tracking_func(register_tracking_fwd, rt, stall_by_2, stall_by_1);
+        }
+
+
+        //Checking if an instruction is LDW; and STW
+        else if (opcode == "001100" || opcode == "001101") {
+            stw_fwd_flag = true;
+            string rs_bin = binary_addr.substr(6, 5);		//Gets rs binary string from binary instruction
+            string rt_bin = binary_addr.substr(11, 5);		//Gets rt binary string from binary instruction
+
+            int rs = stoi(rs_bin, nullptr, 2);          //takes binary string and turns to an integer
+            int rt = stoi(rt_bin, nullptr, 2);          //takes binary string and turns to an integer
+
+            if (latest_data == -1) {
+                CC_fwd = CC_fwd + 1; // 1 per cycle
+                register_tracking_func(register_tracking_fwd, rt, stall_by_2, stall_by_1);
+            }
+
+            else {
+                if (rs == register_tracking_fwd[latest_data]) {
+                    CC_fwd = CC_fwd + 2; //1 per cycle and 2 stalls
+                    stall_by_RAW_fwd = stall_by_RAW_fwd + 1;
+                    stall_by_RAW_fwd_counter = stall_by_RAW_fwd_counter + 1;
+                    stall_by_1 = true;
+                }
+                else {
+                    CC_fwd = CC_fwd + 1; // 1 per cycle
+                }
+                //perform register tracking
+                register_tracking_func(register_tracking_fwd, rt, stall_by_2, stall_by_1);
+
+            }
+        }
+
+        //Checking if an instruction is branch instructions: BZ
+        else if (opcode == "001110") {
+
+            string rs_bin = binary_addr.substr(6, 5);		//Gets rs binary string from binary instruction
+            int rs = stoi(rs_bin, nullptr, 2);          //takes binary string and turns to an integer
+
+            if (rs == register_tracking_fwd[latest_data]) {
+                CC_fwd = CC_fwd + 1;
+                stall_by_RAW_fwd = stall_by_RAW_fwd + 1;
+                stall_by_RAW_fwd_counter = stall_by_RAW_fwd_counter + 1;
+
+            }
+
+            if (Register[rs] == 0) {
+                CC_fwd = CC_fwd + 3;
+                stall_by_branch_fwd = stall_by_branch_fwd + 2;
+                stall_by_branch_fwd_counter = stall_by_branch_fwd_counter + 1;
+                stall_by_1 = true;
+            }
+            else {
+                CC_fwd = CC_fwd + 1; // 1 per cycle
+            }
+
+            register_tracking_func(register_tracking_fwd, -1, stall_by_2, stall_by_1);
+            if (register_tracking_fwd[0] == -999) {
+                for (int i = 0; i < 4; i++) {
+                    register_tracking_fwd[i] = register_tracking_fwd[i + 1];
+                }
+            }
+        }
+
+        //Call BEQ instruction
+        else if (opcode == "001111") {
+
+            string rs_bin = binary_addr.substr(6, 5);		//Gets rs binary string from binary instruction
+            string rt_bin = binary_addr.substr(11, 5);		//Gets rt binary string from binary instruction
+
+            int rs = stoi(rs_bin, nullptr, 2);          //takes binary string and turns to an integer
+            int rt = stoi(rt_bin, nullptr, 2);          //takes binary string and turns to an integer
+
+            if (rs == register_tracking_fwd[latest_data] || rt == register_tracking_fwd[latest_data]) {
+                CC_fwd = CC_fwd + 1;
+                stall_by_RAW_fwd = stall_by_RAW_fwd + 1;
+                stall_by_RAW_fwd_counter = stall_by_RAW_fwd_counter + 1;
+
+            }
+
+
+            if (Register[rs] == Register[rt]) {
+                CC_fwd = CC_fwd + 3;
+                stall_by_branch_fwd = stall_by_branch_fwd + 2;
+                stall_by_branch_fwd_counter = stall_by_branch_fwd_counter + 1;
+                stall_by_2 = true;
+            }
+            else {
+                CC_fwd = CC_fwd + 1; // 1 per cycle
+            }
+
+            register_tracking_func(register_tracking_fwd, -1, stall_by_2, stall_by_1);
+            if (register_tracking_fwd[0] == -999) {
+                for (int i = 0; i < 4; i++) {
+                    register_tracking_fwd[i] = register_tracking_fwd[i + 1];
+                }
+            }
+        }
+
+        //Call JR instruction
+        else if (opcode == "010000") {
+            string rs_bin = binary_addr.substr(6, 5);		//Gets rs binary string from binary instruction
+            int rs = stoi(rs_bin, nullptr, 2);          //takes binary string and turns to an integer
+
+            CC_fwd = CC_fwd + 3;
+            stall_by_branch_fwd = stall_by_branch_fwd + 2;
+            stall_by_branch_fwd_counter = stall_by_branch_fwd_counter + 1;
+            stall_by_1 = true;
+
+            register_tracking_func(register_tracking_fwd, -1, stall_by_2, stall_by_1);
+
+            if (register_tracking_fwd[0] == -999) {
+                for (int i = 0; i < 4; i++) {
+                    register_tracking_fwd[i] = register_tracking_fwd[i + 1];
+                }
+            }
+        }
+
+        else if (opcode == "010001") {
+            //Halt instruction
+            cout << "Halting Program..." << endl;
+        }
+    }
+    else {
+        cout << "0x00000000 input... skip!" << endl;
+    }
+}
+
+
+// Perform register tracking task
+void register_tracking_func(int register_tracking[], int r_des, bool stall_by_2, bool stall_by_1) {
+
+    bool register_tracking_not_full = false;
+
+
+    if (stall_by_2 == true) {
+
+        for (int i = 0; i < 5; i++) {
+            if (register_tracking[i] == -999) {
+                register_tracking_not_full = true;
+
+                if (i == 1 || i == 2) {
+                    register_tracking[i] = -1;
+                    register_tracking[i + 1] = -1;
+                    register_tracking[i + 2] = r_des;
+                    break;
+                }
+                else if (i == 3) {
+                    register_tracking[0] = register_tracking[1];
+                    register_tracking[1] = register_tracking[2];
+                    register_tracking[2] = -1;
+                    register_tracking[3] = -1;
+                    register_tracking[4] = r_des;
+                    break;
+                }
+                else if (i == 4) {
+                    register_tracking[0] = register_tracking[2];
+                    register_tracking[1] = register_tracking[3];
+                    register_tracking[2] = -1;
+                    register_tracking[3] = -1;
+                    register_tracking[4] = r_des;
+                    break;
+                }
+            }
+        }
+
+        if (register_tracking_not_full == false) {
+            for (int i = 0; i < 2; i++) {
+                register_tracking[i] = register_tracking[i + 3];
+            }
+            register_tracking[2] = -1;
+            register_tracking[3] = -1;
+            register_tracking[4] = r_des;
+        }
+    }
+
+    else if (stall_by_1 == true) {
+        for (int i = 0; i < 5; i++) {
+            if (register_tracking[i] == -999) {
+                register_tracking_not_full = true;
+
+                if (i == 1 || i == 2 || i == 3) {
+                    register_tracking[i] = -1;
+                    register_tracking[i + 1] = r_des;
+                    break;
+                }
+                else if (i == 4) {
+                    register_tracking[0] = register_tracking[1];
+                    register_tracking[1] = register_tracking[2];
+                    register_tracking[2] = register_tracking[3];
+                    register_tracking[3] = -1;
+                    register_tracking[4] = r_des;
+                    break;
+                }
+            }
+        }
+        if (register_tracking_not_full == false) {
+            for (int i = 0; i < 3; i++) {
+                register_tracking[i] = register_tracking[i + 2];
+            }
+            register_tracking[3] = -1;
+            register_tracking[4] = r_des;
+
+        }
+    }
+
+    else {
+
+        for (int i = 0; i < 5; i++) {
+            if (register_tracking[i] == -999) {
+                register_tracking[i] = r_des;
+                register_tracking_not_full = true;
+                break;
+            }
+        }
+
+        if (register_tracking_not_full == false) {
+            for (int i = 0; i < 4; i++) {
+                register_tracking[i] = register_tracking[i + 1];
+            }
+
+            register_tracking[4] = r_des;
+        }
+    }
+
+}
+
+
 /*//////////////////////////////////////////////
 This will determine if stalls are required based on the previous instructions that have already entered the pipe
 This will check on what type of instruction they are and take appropriate actions based on that.
